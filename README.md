@@ -25,6 +25,13 @@ Featuring an **Animated Terminal CRT Boot Sequence**, **Snake**, **Pong**, and *
 
 ---
 
+## Live Project Website
+
+Explore the interactive portfolio project showcase and hardware architecture website:
+[https://thee-hector-genaro-pacheco.github.io/pi-arcade-os/](https://thee-hector-genaro-pacheco.github.io/pi-arcade-os/)
+
+---
+
 ## 📄 Resume Bullet Point
 
 > **Embedded Software Engineer / Python Developer**

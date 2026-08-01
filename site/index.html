@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pi Arcade OS — Modular Embedded Arcade Platform</title>
+  <meta name="description" content="Portfolio case-study and documentation website for Pi Arcade OS, an embedded arcade operating system built for Raspberry Pi 5.">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <!-- Sticky Navbar -->
+  <nav class="navbar" aria-label="Main Navigation">
+    <div class="nav-container">
+      <a href="#" class="brand-logo" aria-label="Pi Arcade OS Home">
+        <span>🎮 Pi Arcade OS</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#games">Games</a></li>
+        <li><a href="#engineering">Engineering</a></li>
+        <li><a href="#hardware">Hardware</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#testing">Testing</a></li>
+        <li><a href="#challenges">Challenges</a></li>
+        <li><a href="https://github.com/Thee-Hector-Genaro-Pacheco/pi-arcade-os" target="_blank" rel="noopener" class="nav-cta">GitHub Repo</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <!-- 1. Hero Section -->
+    <section class="hero-section" id="hero">
+      <div class="hero-badge">
+        <span>🚀 Version 1.0.0</span> • <span>Embedded Arcade Platform</span>
+      </div>
+      <h1 class="hero-title">Pi Arcade OS</h1>
+      <p class="hero-subtitle">
+        A modular embedded arcade platform built with Python, Pygame, Raspberry Pi GPIO, I2C LCD integration, audio synthesis, persistent saves, diagnostics, and automated testing.
+      </p>
+      <div class="hero-buttons">
+        <a href="https://github.com/Thee-Hector-Genaro-Pacheco/pi-arcade-os" target="_blank" rel="noopener" class="btn btn-primary">
+          <span>💻 View Source Code</span>
+        </a>
+        <a href="#architecture" class="btn btn-secondary">
+          <span>🏗️ View Architecture</span>
+        </a>
+        <a href="#demo" class="btn btn-secondary">
+          <span>🎬 Watch Demo</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 2. Project Overview Section -->
+    <section class="section-container" id="overview">
+      <div class="section-header">
+        <h2 class="section-title">Project Overview</h2>
+        <p class="section-subtitle">
+          Evolution from a standalone Snake script into an enterprise-grade retro arcade operating system.
+        </p>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title">Architectural Evolution</div>
+        <p>
+          Pi Arcade OS evolved from a single-game Raspberry Pi Snake controller into a full-featured, hardware-decoupled multi-game operating system. The platform features an object-oriented <code>ArcadeGame</code> interface, non-blocking audio engine, thread-safe input queueing, 16x2 I2C LCD character display output, atomic JSON save file recovery, live color palette switching, an animated CRT terminal boot sequence, and a 100% hardware-isolated test suite.
+        </p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 3. Current Games Section -->
+    <section class="section-container" id="games">
+      <div class="section-header">
+        <h2 class="section-title">Playable Games Catalog</h2>
+        <p class="section-subtitle">
+          Fully playable retro arcade titles built upon shared platform services.
+        </p>
+      </div>
+
+      <div class="cards-grid">
+        <!-- Snake Card -->
+        <article class="card">
+          <div class="screenshot-frame">
+            <div class="icon">🐍</div>
+            <div class="label">Snake (v1.3.0) Screenshot</div>
+          </div>
+          <h3 class="card-title">🐍 Snake</h3>
+          <p class="card-desc">
+            Classic arcade snake game. Eat food, grow, avoid wall and self-collisions, and beat high score records!
+          </p>
+          <div class="controls-list">
+            <div><span>Movement:</span> <span>Arrows / WASD / GPIO 27,22,23,24</span></div>
+            <div><span>Exit:</span> <span>ESC</span></div>
+          </div>
+          <div class="badge-list">
+            <span class="badge badge-success">Playable v1.3.0</span>
+            <span class="badge">✓ GPIO</span>
+            <span class="badge">✓ LCD</span>
+            <span class="badge">✓ Audio</span>
+            <span class="badge">✓ Keyboard</span>
+          </div>
+        </article>
+
+        <!-- Pong Card -->
+        <article class="card">
+          <div class="screenshot-frame">
+            <div class="icon">🏓</div>
+            <div class="label">Pong (v1.0.0) Screenshot</div>
+          </div>
+          <h3 class="card-title">🏓 Pong</h3>
+          <p class="card-desc">
+            Classic paddle battle featuring 2-Player local keyboard mode and single-player GPIO mode against a beatable AI.
+          </p>
+          <div class="controls-list">
+            <div><span>Player 1:</span> <span>W / S (Keyboard) | GPIO 27 & 22</span></div>
+            <div><span>Player 2 / AI:</span> <span>Up / Down (Keyboard) | AI Engine</span></div>
+            <div><span>Pause / Restart:</span> <span>P / R</span></div>
+          </div>
+          <div class="badge-list">
+            <span class="badge badge-success">Playable v1.0.0</span>
+            <span class="badge">✓ GPIO (AI)</span>
+            <span class="badge">✓ LCD</span>
+            <span class="badge">✓ Audio</span>
+            <span class="badge">✓ Keyboard</span>
+          </div>
+        </article>
+
+        <!-- Tetris Card -->
+        <article class="card">
+          <div class="screenshot-frame">
+            <div class="icon">🧱</div>
+            <div class="label">Tetris (v1.0.0) Screenshot</div>
+          </div>
+          <h3 class="card-title">🧱 Tetris</h3>
+          <p class="card-desc">
+            Classic block-stacking puzzle game featuring 7-bag randomizer, wall kicks, ghost piece, soft/hard drop, line clears, and level progression.
+          </p>
+          <div class="controls-list">
+            <div><span>Move / Rotate:</span> <span>A,D / Up,X (CW), Z (CCW)</span></div>
+            <div><span>Soft / Hard Drop:</span> <span>S / Space</span></div>
+            <div><span>Pause / Exit:</span> <span>P / ESC</span></div>
+          </div>
+          <div class="badge-list">
+            <span class="badge badge-success">Playable v1.0.0</span>
+            <span class="badge">✓ GPIO</span>
+            <span class="badge">✓ LCD</span>
+            <span class="badge">✓ Audio</span>
+            <span class="badge">✓ Keyboard</span>
+          </div>
+        </article>
+
+        <!-- Breakout Card (Coming Soon) -->
+        <article class="card">
+          <div class="screenshot-frame">
+            <div class="icon">🧱</div>
+            <div class="label">Breakout (Preview) Screenshot</div>
+          </div>
+          <h3 class="card-title">🧱 Breakout</h3>
+          <p class="card-desc">
+            Upcoming brick-busting arcade challenge with paddle dynamics, power-ups, and brick grid destruction.
+          </p>
+          <div class="controls-list">
+            <div><span>Target Release:</span> <span>Sprint 6</span></div>
+            <div><span>Status:</span> <span>Coming Soon Preview</span></div>
+          </div>
+          <div class="badge-list">
+            <span class="badge badge-orange">Coming Soon (Sprint 6)</span>
+            <span class="badge">✓ GPIO Target</span>
+            <span class="badge">✓ LCD Target</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 4. Engineering Highlights Section -->
+    <section class="section-container" id="engineering">
+      <div class="section-header">
+        <h2 class="section-title">Engineering Highlights</h2>
+        <p class="section-subtitle">
+          Core architectural patterns and technical features engineered into the platform.
+        </p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon">🔌</div>
+          <h3 class="card-title">Modular ArcadeGame Interface</h3>
+          <p class="card-desc">Decouples game logic from hardware I/O and display rendering using an abstract base class contract.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">📚</div>
+          <h3 class="card-title">Dynamic Game Registry</h3>
+          <p class="card-desc">Central registry pattern managing game metadata, instantiation, menu ordering, and coming-soon previews.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚡</div>
+          <h3 class="card-title">Thread-Safe Input Queue</h3>
+          <p class="card-desc">Multi-threaded <code>gpiozero</code> button callbacks enqueue actions into <code>queue.Queue</code> to prevent Pygame race conditions.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">📟</div>
+          <h3 class="card-title">16x2 I2C LCD Output</h3>
+          <p class="card-desc">Real-time score, pause, game-over, and launcher menu updates output to physical character display at <code>0x27</code>.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔊</div>
+          <h3 class="card-title">PCM & Buzzer Audio Engine</h3>
+          <p class="card-desc">Programmatic PCM sound wave synthesis for Pygame mixer and passive GPIO buzzer PWM frequencies across 30 sound events.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">💾</div>
+          <h3 class="card-title">Crash-Resilient Save System</h3>
+          <p class="card-desc">Atomic temporary file writes and <code>os.replace</code> prevent zero-byte corruptions during sudden power cuts.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🎨</div>
+          <h3 class="card-title">Settings & Theme Engine</h3>
+          <p class="card-desc">Live RGB theme palette switching (Slate Dark, Cyberpunk Gold, Retro Monokai, Neon Synthwave) and multi-channel volume sliders.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">📊</div>
+          <h3 class="card-title">Diagnostics & 76+ Unit Tests</h3>
+          <p class="card-desc">Command-line <code>--diagnostics</code> report generator and 100% hardware-isolated test suite running headlessly in CI.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🐍</div>
+          <h3 class="card-title">Python 3.9–3.13 Compatibility</h3>
+          <p class="card-desc">Strict type annotation compatibility validated across Python 3.9, 3.10, 3.11, 3.12, and 3.13 runtimes.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 5. Hardware Architecture Section -->
+    <section class="section-container" id="hardware">
+      <div class="section-header">
+        <h2 class="section-title">Hardware Architecture & Pinout</h2>
+        <p class="section-subtitle">
+          Physical GPIO wiring map and component interface specifications for Raspberry Pi 5.
+        </p>
+      </div>
+
+      <div class="table-responsive">
+        <table class="pin-table">
+          <thead>
+            <tr>
+              <th>Subsystem</th>
+              <th>Function</th>
+              <th>BCM GPIO</th>
+              <th>Physical Header Pin</th>
+              <th>Wiring & State</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Control Button</strong></td>
+              <td>UP / P1 Paddle Up / Tetris Rotate</td>
+              <td><code>GPIO27</code></td>
+              <td>Pin 13</td>
+              <td><span class="wire-badge" style="background:#ea580c; color:#fff;">Orange Wire</span> (Active LOW)</td>
+            </tr>
+            <tr>
+              <td><strong>Control Button</strong></td>
+              <td>DOWN / P1 Paddle Down / Soft Drop</td>
+              <td><code>GPIO22</code></td>
+              <td>Pin 15</td>
+              <td><span class="wire-badge" style="background:#eab308; color:#000;">Yellow Wire</span> (Active LOW)</td>
+            </tr>
+            <tr>
+              <td><strong>Control Button</strong></td>
+              <td>LEFT / Pause / Tetris Move Left</td>
+              <td><code>GPIO23</code></td>
+              <td>Pin 16</td>
+              <td><span class="wire-badge" style="background:#2563eb; color:#fff;">Blue Wire</span> (Active LOW)</td>
+            </tr>
+            <tr>
+              <td><strong>Control Button</strong></td>
+              <td>RIGHT / Select / Move Right</td>
+              <td><code>GPIO24</code></td>
+              <td>Pin 18</td>
+              <td><span class="wire-badge" style="background:#16a34a; color:#fff;">Green Wire</span> (Active LOW)</td>
+            </tr>
+            <tr>
+              <td><strong>Buttons Common</strong></td>
+              <td>Ground Reference</td>
+              <td>-</td>
+              <td>Pin 14</td>
+              <td><span class="wire-badge" style="background:#334155; color:#fff;">Black Wire</span> (Common GND)</td>
+            </tr>
+            <tr>
+              <td><strong>16x2 I2C LCD</strong></td>
+              <td>VCC (+5V Power)</td>
+              <td>-</td>
+              <td>Pin 2</td>
+              <td><span class="wire-badge" style="background:#dc2626; color:#fff;">Red Power Wire</span></td>
+            </tr>
+            <tr>
+              <td><strong>16x2 I2C LCD</strong></td>
+              <td>Ground</td>
+              <td>-</td>
+              <td>Pin 6</td>
+              <td><span class="wire-badge" style="background:#334155; color:#fff;">Black Ground Wire</span></td>
+            </tr>
+            <tr>
+              <td><strong>16x2 I2C LCD</strong></td>
+              <td>SDA (Data Line)</td>
+              <td><code>GPIO02</code></td>
+              <td>Pin 3</td>
+              <td>I2C Bus 1 (Address <code>0x27</code>)</td>
+            </tr>
+            <tr>
+              <td><strong>16x2 I2C LCD</strong></td>
+              <td>SCL (Clock Line)</td>
+              <td><code>GPIO03</code></td>
+              <td>Pin 5</td>
+              <td>I2C Bus 1 Clock</td>
+            </tr>
+            <tr>
+              <td><strong>Passive Buzzer</strong></td>
+              <td>PWM Audio Signal</td>
+              <td><code>GPIO12</code></td>
+              <td>Pin 32</td>
+              <td><span class="wire-badge" style="background:#9333ea; color:#fff;">Purple Signal</span> (PWM0)</td>
+            </tr>
+            <tr>
+              <td><strong>Passive Buzzer</strong></td>
+              <td>Ground Reference</td>
+              <td>-</td>
+              <td>Pin 34</td>
+              <td><span class="wire-badge" style="background:#334155; color:#fff;">Black Ground Wire</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 6. Software Architecture Section -->
+    <section class="section-container" id="architecture">
+      <div class="section-header">
+        <h2 class="section-title">Software Architecture</h2>
+        <p class="section-subtitle">
+          Object-oriented platform structure and hardware service abstraction flow.
+        </p>
+      </div>
+
+      <div class="code-block-container">
+        <pre><code>+-----------------------------------------------------------------------------+
+|                                  main.py                                    |
+|   - Parses CLI Flags (--gpio, --no-lcd, --no-audio, --no-boot, --diagnostics) |
+|   - Executes BootSequence CRT Terminal Animation                            |
+|   - Drives 60 FPS Event Loop & Subsystem Cleanup                            |
++-----------------------------------------------------------------------------+
+                                       |
+                                       v
++-----------------------------------------------------------------------------+
+|                                  Launcher                                   |
+|   - State Machine: MENU, PLAYING, SHOWING_NOTICE, SETTINGS, STATS, EXITING  |
+|   - Animated Glowing Selection Box, Floating Particles & Banner             |
+|   - Modal Renderers & Toast Notifications Overlay                           |
++-----------------------------------------------------------------------------+
+      |                          |                           |
+      v                          v                           v
++------------------+   +-------------------+   +------------------------------+
+|   GameRegistry   |   |   SaveManager     |   |       SettingsManager        |
+| - ID Dataclass   |   | - Atomic Write    |   | - Volume & LCD Sliders       |
+| - Factory Inst.  |   | - Backup Restore  |   | - Theme Palettes Engine      |
++------------------+   +-------------------+   +------------------------------+
+      |                                                      |
+      v                                                      v
++-----------------------------------------------------------------------------+
+|                              ArcadeGame (ABC)                               |
+|   - Contract: start(), handle_event(), update(), draw(), reset(), cleanup() |
++-----------------------------------------------------------------------------+
+      |                          |                           |
+      +--------------------------+---------------------------+
+      |                          |                           |
+      v                          v                           v
++------------------+   +-------------------+   +------------------------------+
+|    SnakeGame     |   |     PongGame      |   |          TetrisGame          |
+| - Grid Physics   |   | - Ball Vectors    |   | - 10x20 Playfield / 7-Bag    |
+| - High Score     |   | - Beatable AI     |   | - Wall Kicks / Line Clears   |
++------------------+   +-------------------+   +------------------------------+
+                                       |
+                                       v
++-----------------------------------------------------------------------------+
+|                         Hardware Abstraction Layer                          |
+|  +---------------------+   +---------------------+   +-------------------+  |
+|  |    InputManager     |   |   DisplayManager    |   |   AudioManager    |  |
+|  | - Keyboard Handler  |   | - Pygame Desktop    |   | - PCM Wave Synth  |  |
+|  | - GPIO Queue       |   | - 16x2 I2C LCD      |   | - Passive Buzzer  |  |
+|  +---------------------+   +---------------------+   +-------------------+  |
++-----------------------------------------------------------------------------+</code></pre>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 7. Testing Section -->
+    <section class="section-container" id="testing">
+      <div class="section-header">
+        <h2 class="section-title">Automated Testing & Quality Assurance</h2>
+        <p class="section-subtitle">
+          Hardware-isolated test suite running in headless CI environments.
+        </p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon">🧪</div>
+          <h3 class="card-title">76+ Passing Unit Tests</h3>
+          <p class="card-desc">Full test coverage executing via <code>pytest</code> and <code>unittest</code> in under 0.5 seconds.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🤖</div>
+          <h3 class="card-title">Headless CI Isolation</h3>
+          <p class="card-desc">Tests enforce <code>SDL_VIDEODRIVER=dummy</code> and dummy audio drivers to validate logic without physical displays.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🛡️</div>
+          <h3 class="card-title">Corruption Recovery Verification</h3>
+          <p class="card-desc">Tests simulate corrupted JSON files and verify automatic rollback to backup copies (<code>save_data.json.bak</code>).</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 8. Challenges Solved Section -->
+    <section class="section-container" id="challenges">
+      <div class="section-header">
+        <h2 class="section-title">Engineering Challenges Solved</h2>
+        <p class="section-subtitle">
+          Technical hurdles overcome during embedded arcade platform development.
+        </p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <h3 class="card-title">1. BCM vs. Physical Pin Mapping</h3>
+          <p class="card-desc">Eliminated wiring confusion by mapping software BCM GPIO numbers to exact Raspberry Pi 5 physical header pins.</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">2. Tactile Button Contact Debouncing</h3>
+          <p class="card-desc">Enforced software contact debouncing (<code>bounce_time=0.05</code>) to eliminate noisy duplicate inputs from tactile switches.</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">3. Multi-Threaded Input Race Conditions</h3>
+          <p class="card-desc">Prevented Pygame event loop thread crashes by pushing background GPIO button callbacks to a thread-safe <code>queue.Queue</code>.</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">4. I2C LCD Display Bus Contention</h3>
+          <p class="card-desc">Wrapped physical I2C display calls in try-except isolation guards to ensure display errors never crash game loop execution.</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">5. Cross-Platform Environment Fallbacks</h3>
+          <p class="card-desc">Engineered graceful degradation allowing the OS to run seamlessly in keyboard-only mode on macOS or headless CI servers.</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">6. Tetris Escape vs. Pause Input Routing</h3>
+          <p class="card-desc">Resolved control ambiguity by routing <code>pygame.K_ESCAPE</code> exclusively to menu return and <code>pygame.K_p</code> to pause/resume.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 9. Technology Stack Section -->
+    <section class="section-container" id="tech">
+      <div class="section-header">
+        <h2 class="section-title">Technology Stack</h2>
+        <p class="section-subtitle">
+          Core technologies, libraries, and tools powering Pi Arcade OS.
+        </p>
+      </div>
+
+      <div class="tech-grid">
+        <div class="tech-badge">🐍 Python 3.9–3.13</div>
+        <div class="tech-badge">🎮 Pygame 2.6+</div>
+        <div class="tech-badge">⚡ gpiozero</div>
+        <div class="tech-badge">📟 RPLCD (I2C)</div>
+        <div class="tech-badge">🍓 Raspberry Pi 5</div>
+        <div class="tech-badge">🧪 pytest</div>
+        <div class="tech-badge">🐙 GitHub Actions</div>
+        <div class="tech-badge">🐧 Linux / Raspberry Pi OS</div>
+        <div class="tech-badge">🍎 macOS Compatibility</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 10. Screenshots Gallery Section -->
+    <section class="section-container" id="screenshots">
+      <div class="section-header">
+        <h2 class="section-title">Screenshots & UI Gallery</h2>
+        <p class="section-subtitle">
+          Interface mockups and hardware display showcase.
+        </p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="screenshot-frame">
+            <div class="icon">🖥️</div>
+            <div class="label">Arcade Launcher Interface</div>
+          </div>
+          <h3 class="card-title">Arcade OS Launcher</h3>
+          <p class="card-desc">Selection cards, pulsing menu cursor, hardware badges, and background particles.</p>
+        </div>
+
+        <div class="card">
+          <div class="screenshot-frame">
+            <div class="icon">⚙️</div>
+            <div class="label">Settings Menu Overlay</div>
+          </div>
+          <h3 class="card-title">System Settings Modal</h3>
+          <p class="card-desc">Interactive volume sliders, theme palette switcher, and control scheme options.</p>
+        </div>
+
+        <div class="card">
+          <div class="screenshot-frame">
+            <div class="icon">📊</div>
+            <div class="label">Statistics & Versions Screen</div>
+          </div>
+          <h3 class="card-title">System Statistics Modal</h3>
+          <p class="card-desc">Aggregate play time, favorite game, game stats, system versions, and achievements.</p>
+        </div>
+
+        <div class="card">
+          <div class="screenshot-frame">
+            <div class="icon">📟</div>
+            <div class="label">Physical 16x2 LCD Output</div>
+          </div>
+          <h3 class="card-title">16x2 Character LCD</h3>
+          <p class="card-desc">Real-time score, pause, and game-over output synced over I2C (Address 0x27).</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 11. Demo Video Section -->
+    <section class="section-container" id="demo">
+      <div class="section-header">
+        <h2 class="section-title">Hardware & Gameplay Video Demo</h2>
+        <p class="section-subtitle">
+          Watch Pi Arcade OS running live on Raspberry Pi 5 hardware.
+        </p>
+      </div>
+
+      <div class="video-card">
+        <h3>📹 Video Showcase</h3>
+        <p style="color: var(--text-muted); margin-top: 0.4rem;">
+          Hardware and gameplay demonstration coming soon.
+        </p>
+        
+        <!-- VIDEO EMBED LOCATION: Replace video-placeholder div with YouTube iframe embed below -->
+        <!-- <iframe width="100%" height="380" src="https://www.youtube.com/embed/YOUR_VIDEO_ID" frameborder="0" allowfullscreen></iframe> -->
+        <div class="video-placeholder">
+          <div class="play-icon">▶</div>
+          <div>Demo Video Coming Soon</div>
+          <div style="font-size: 0.8rem; margin-top: 0.4rem;">Raspberry Pi 5 Arcade OS Video Demonstration</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 12. Footer & Links -->
+  <footer>
+    <div class="section-container" style="padding: 1rem 1.5rem;">
+      <ul class="footer-links">
+        <li><a href="https://github.com/Thee-Hector-Genaro-Pacheco/pi-arcade-os" target="_blank" rel="noopener">GitHub Repository</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#hardware">Pinout Guide</a></li>
+        <li><a href="#hero">Back to Top</a></li>
+      </ul>
+      <p>
+        Pi Arcade OS — Developed by <strong>Hector Pacheco</strong> | Designed for Raspberry Pi 5
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
