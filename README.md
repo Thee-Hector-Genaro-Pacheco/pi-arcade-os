@@ -45,31 +45,6 @@ Featuring **Snake** and **Pong** as fully playable platform games, **SaveManager
 
 ---
 
-## System Architecture
-
-```mermaid
-graph TD
-    SubMain["src/main.py (Entry Point)"] --> SubSave["SaveManager (src/save_manager.py)"]
-    SubMain --> SubSettings["SettingsManager (src/settings_manager.py)"]
-    SubMain --> SubInput["InputManager (src/hardware/input_manager.py)"]
-    SubMain --> SubDisplay["DisplayManager (src/hardware/display.py)"]
-    SubMain --> SubAudio["AudioManager (src/hardware/audio.py)"]
-    SubMain --> SubRegistry["GameRegistry (src/game_registry.py)"]
-    SubMain --> SubLauncher["Launcher (src/launcher.py)"]
-
-    SubSave <-->|Atomic JSON Persistence| SubSettings
-    SubInput -->|Thread-Safe Action Queue| SubLauncher
-    SubLauncher -->|Update 16x2 LCD| SubDisplay
-    SubLauncher -->|Tone Synthesis| SubAudio
-
-    SubLauncher -->|Lookup & Instantiate| SubRegistry
-    SubRegistry -->|Manages Metadata & Classes| SubInterface["ArcadeGame Interface (src/game_interface.py)"]
-    SubInterface <|.. SubSnake["SnakeGame (src/games/snake_game.py)"]
-    SubInterface <|.. SubPong["PongGame (src/games/pong_game.py)"]
-```
-
----
-
 ## Hardware Pin Mapping (Raspberry Pi 5)
 
 | Subsystem | Function | BCM GPIO | Physical Header Pin | Wiring / Color |

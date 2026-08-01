@@ -6,32 +6,6 @@
 
 ---
 
-## High-Level Component Diagram
-
-```mermaid
-graph TD
-    SubMain["src/main.py (Entry Point)"] --> SubSave["SaveManager (src/save_manager.py)"]
-    SubMain --> SubSettings["SettingsManager (src/settings_manager.py)"]
-    SubMain --> SubInput["InputManager (src/hardware/input_manager.py)"]
-    SubMain --> SubDisplay["DisplayManager (src/hardware/display.py)"]
-    SubMain --> SubAudio["AudioManager (src/hardware/audio.py)"]
-    SubMain --> SubDiag["SystemDiagnostics (src/hardware/diagnostics.py)"]
-    SubMain --> SubRegistry["GameRegistry (src/game_registry.py)"]
-    SubMain --> SubLauncher["Launcher (src/launcher.py)"]
-
-    SubSave <-->|Atomic Save Persistence| SubSettings
-    SubInput -->|Thread-Safe Action Queue| SubLauncher
-    SubLauncher -->|Update LCD| SubDisplay
-    SubLauncher -->|Play Tones| SubAudio
-
-    SubLauncher -->|Lookup & Instantiate| SubRegistry
-    SubRegistry -->|Manages Metadata & Classes| SubInterface["ArcadeGame Interface (src/game_interface.py)"]
-    SubInterface <|.. SubSnake["SnakeGame (src/games/snake_game.py)"]
-    SubInterface <|.. SubPong["PongGame (src/games/pong_game.py)"]
-```
-
----
-
 ## Core Components Breakdown
 
 ### 1. Main Entry Point (`src/main.py`)
@@ -55,20 +29,3 @@ graph TD
 - **`ArcadeGame` Interface (`src/game_interface.py`)**: Abstract base class enforcing properties (`name`, `description`, `is_finished`, metadata getters) and lifecycle methods (`start()`, `handle_event()`, `update()`, `draw()`, `reset()`, `cleanup()`).
 - **`GameRegistry` (`src/game_registry.py`)**: Central registry managing `GameMetadata` dataclass instances and `ArcadeGame` classes. Supports previewing coming-soon titles safely without instantiating unwritten code.
 - **`Launcher` (`src/launcher.py`)**: Top-level state machine (`MENU`, `PLAYING`, `SHOWING_NOTICE`, `SHOWING_SETTINGS`, `EXITING`). Renders animated menu cursor (`>`), glowing title banner, particle background, selection cards, hardware badges, and modal overlays.
-
----
-
-## State Machine Transition Diagram
-
-```mermaid
-stateDiagram-v2
-    [*] --> MENU : Launcher Init
-    MENU --> PLAYING : Select Playable Game (Action.SELECT)
-    MENU --> SHOWING_SETTINGS : Press S / Open Settings
-    MENU --> SHOWING_NOTICE : Select Coming-Soon Game
-    SHOWING_SETTINGS --> MENU : Press ESC / Back
-    SHOWING_NOTICE --> MENU : Press Any Key / ESC
-    PLAYING --> MENU : Game Finished (is_finished == True)
-    MENU --> EXITING : Exit Action (Action.BACK / Action.QUIT)
-    EXITING --> [*] : Clean Hardware Release & Shutdown
-```
