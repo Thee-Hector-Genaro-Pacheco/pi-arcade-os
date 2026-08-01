@@ -47,6 +47,7 @@ class SaveManager:
         self.total_lines: Dict[str, int] = {}
         self.highest_level: Dict[str, int] = {}
         self.tetrises_cleared: Dict[str, int] = {}
+        self.achievements: Dict[str, str] = {}
         self.settings: Dict[str, Any] = {}
 
         # Load save data from disk
@@ -69,6 +70,7 @@ class SaveManager:
             "total_lines": {},
             "highest_level": {},
             "tetrises_cleared": {},
+            "achievements": {},
             "settings": {},
         }
 
@@ -124,6 +126,7 @@ class SaveManager:
         self.total_lines = {str(k): int(v) for k, v in data.get("total_lines", {}).items()}
         self.highest_level = {str(k): int(v) for k, v in data.get("highest_level", {}).items()}
         self.tetrises_cleared = {str(k): int(v) for k, v in data.get("tetrises_cleared", {}).items()}
+        self.achievements = {str(k): str(v) for k, v in data.get("achievements", {}).items()}
 
         if isinstance(data.get("settings"), dict):
             self.settings = data["settings"]
@@ -145,6 +148,7 @@ class SaveManager:
             "total_lines": self.total_lines,
             "highest_level": self.highest_level,
             "tetrises_cleared": self.tetrises_cleared,
+            "achievements": self.achievements,
             "settings": self.settings,
         }
 
@@ -200,6 +204,9 @@ class SaveManager:
         clean_id = game_id.strip().lower()
         is_new_high = False
 
+        if clean_id not in self.games_played:
+            self.games_played[clean_id] = 1
+
         current_high = self.high_scores.get(clean_id, 0)
         if score > current_high:
             self.high_scores[clean_id] = score
@@ -231,6 +238,9 @@ class SaveManager:
             True if Player 1 won the match.
         """
         game_id = "pong"
+        if game_id not in self.games_played:
+            self.games_played[game_id] = 1
+
         p1_won = p1_score > p2_score
 
         if p1_won:
@@ -269,6 +279,9 @@ class SaveManager:
             True if a new high score was set.
         """
         game_id = "tetris"
+        if game_id not in self.games_played:
+            self.games_played[game_id] = 1
+
         is_new_high = False
 
         current_high = self.high_scores.get(game_id, 0)
@@ -371,6 +384,45 @@ class SaveManager:
             self.total_play_time = 0.0
 
         self.save()
+
+    def get_total_games_played(self) -> int:
+        """Returns the total number of game sessions played across all games."""
+        return sum(v for k, v in self.games_played.items() if k != "total")
+
+    def get_favorite_game(self) -> str:
+        """Returns the name of the most played game based on session count."""
+        if not self.games_played:
+            return "Snake"
+        fav_id = max(self.games_played, key=lambda k: self.games_played[k])
+        names = {"snake": "Snake", "pong": "Pong", "tetris": "Tetris", "breakout": "Breakout"}
+        return names.get(fav_id, fav_id.capitalize())
+
+    def get_average_session_length(self) -> float:
+        """Returns average session length in seconds."""
+        total_sessions = self.get_total_games_played()
+        if total_sessions <= 0:
+            return 0.0
+        return self.total_play_time / float(total_sessions)
+
+    def unlock_achievement(self, achievement_id: str, timestamp: str = "") -> bool:
+        """
+        Unlocks an achievement if not already unlocked.
+
+        Returns:
+            True if achievement was newly unlocked, False if already unlocked.
+        """
+        clean_id = achievement_id.strip().lower()
+        if clean_id not in self.achievements:
+            import datetime
+            ts = timestamp or datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.achievements[clean_id] = ts
+            self.save()
+            return True
+        return False
+
+    def is_achievement_unlocked(self, achievement_id: str) -> bool:
+        """Returns True if the given achievement has been unlocked."""
+        return achievement_id.strip().lower() in self.achievements
 
     def reset_all(self) -> None:
         """Resets all save data and backups to clean schema defaults."""

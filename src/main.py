@@ -2,8 +2,8 @@
 Main entry point for Pi Arcade OS.
 
 Parses command line arguments, initializes hardware subsystems (InputManager, DisplayManager, AudioManager),
-configures GameRegistry with playable games (Snake, Pong, Tetris) and coming-soon previews (Breakout),
-initializes Launcher state machine, and runs the primary 60 FPS update and render loop.
+runs terminal CRT BootSequence animation, configures GameRegistry with playable games (Snake, Pong, Tetris)
+and coming-soon previews (Breakout), initializes Launcher state machine, and runs primary 60 FPS update loop.
 Supports Python 3.9+ typing.
 """
 
@@ -14,8 +14,10 @@ from typing import Optional
 import pygame
 
 from src.config import FPS, SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE, Action
+from src.version import VERSION, get_version_info
 from src.save_manager import SaveManager
 from src.settings_manager import SettingsManager
+from src.boot_sequence import BootSequence, BootState
 from src.game_registry import GameRegistry, GameMetadata
 from src.games.snake_game import SnakeGame
 from src.games.pong_game import PongGame
@@ -57,6 +59,11 @@ def parse_args() -> argparse.Namespace:
         help="Disable audio engine (Pygame mixer and passive buzzer)",
     )
     parser.add_argument(
+        "--no-boot",
+        action="store_true",
+        help="Skip animated terminal boot sequence transition",
+    )
+    parser.add_argument(
         "--diagnostics",
         action="store_true",
         help="Generate and print hardware subsystem diagnostics report and exit",
@@ -65,10 +72,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    """Primary application entry point and 60 FPS game loop."""
+    """Primary application entry point, boot sequence, and 60 FPS game loop."""
     args = parse_args()
 
-    logger.info("Initializing Pi Arcade OS...")
+    logger.info(f"Initializing {get_version_info()}...")
     logger.info(f"Hardware Flags: GPIO={args.gpio}, LCD={not args.no_lcd}, Audio={not args.no_audio}")
 
     # 1. Initialize Pygame Video Subsystem
@@ -195,7 +202,34 @@ def main() -> None:
         pygame.quit()
         sys.exit(0)
 
-    # 5. Initialize Launcher Controller
+    # 5. Execute Animated CRT Terminal Boot Sequence
+    if not args.no_boot:
+        logger.info("Executing animated boot sequence...")
+        boot_sequence = BootSequence(
+            audio_manager=audio_manager,
+            display_manager=display_manager,
+            fast_mode=False,
+        )
+
+        while not boot_sequence.is_finished:
+            delta_time = clock.tick(FPS) / 1000.0
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    input_manager.cleanup()
+                    display_manager.cleanup()
+                    audio_manager.cleanup()
+                    pygame.quit()
+                    sys.exit(0)
+                elif event.type == pygame.KEYDOWN and event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_ESCAPE):
+                    boot_sequence._state = BootState.FINISHED
+                    break
+
+            boot_sequence.update(delta_time)
+            boot_sequence.draw(screen)
+            pygame.display.flip()
+
+    # 6. Initialize Launcher Controller
     launcher = Launcher(
         registry=registry,
         display_manager=display_manager,
@@ -217,10 +251,13 @@ def main() -> None:
                     running = False
                     break
 
-                # Handle S key shortcut for Settings view
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_s and launcher.state == LauncherState.MENU:
-                    launcher.open_settings_view()
-                    continue
+                if event.type == pygame.KEYDOWN and launcher.state == LauncherState.MENU:
+                    if event.key == pygame.K_s:
+                        launcher.open_settings_view()
+                        continue
+                    elif event.key == pygame.K_t:
+                        launcher.open_stats_view()
+                        continue
 
                 # Pass keyboard events through input manager
                 action = input_manager.process_pygame_event(event)

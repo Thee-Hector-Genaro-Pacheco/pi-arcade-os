@@ -60,8 +60,18 @@ Detailed multi-sprint timeline for evolving **Pi Arcade OS** into a portfolio re
 - [x] Line clearing flash animations, 4-line Tetris clears, scoring table, and level progression.
 - [x] SaveManager schema extensions for high scores, lines cleared, highest level, and tetrises count.
 - [x] Real-time 16x2 I2C LCD lines (`Score: X`, `L:Y Lv:Z`, `Tetris Paused`, `Game Over`).
-- [x] 9 new sound synthesis events (`TETRIS_MOVE`, `TETRIS_ROTATE`, `TETRIS_SOFT_DROP`, `TETRIS_HARD_DROP`, `TETRIS_LOCK`, `TETRIS_LINE_CLEAR`, `TETRIS_TETRIS_CLEAR`, `TETRIS_LEVEL_UP`, `TETRIS_GAME_OVER`).
-- [x] Full unit test suite in `tests/test_tetris.py`.
+- [x] 9 new sound synthesis events.
+
+---
+
+## Sprint 5 (OS Upgrade): Arcade Operating System Experience (Completed)
+- [x] Animated CRT Terminal Boot Sequence (`BootSequence`) with checkmark diagnostics (`✓`).
+- [x] Persistent Achievement System (`AchievementManager`) with 8 unlockable badges saved in `save_data.json`.
+- [x] Toast Notification System (`NotificationManager`) with auto-fading popups, progress slides, and custom icon badges.
+- [x] Standalone System & Gameplay Statistics Screen (`SHOWING_STATS`, `T` key shortcut).
+- [x] Version Manager (`version.py`) storing version, build ID, author, and release info.
+- [x] 30 PCM synthesized sound events across Pygame mixer and GPIO passive buzzer.
+- [x] Test suite expansion to 76 passing unit tests.
 
 ---
 

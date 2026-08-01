@@ -12,7 +12,8 @@
 
 **Embedded Arcade Operating System & Multi-Game Platform for Raspberry Pi 5**
 
-Author: **Hector Pacheco**
+Author: **Hector Pacheco**  
+Version: **1.0.0 (Build 2026.08.01-RC1)**
 
 ---
 
@@ -20,29 +21,32 @@ Author: **Hector Pacheco**
 
 **Pi Arcade OS** is an object-oriented, hardware-decoupled retro arcade operating system built in Python 3.9–3.13 and Pygame. Designed for embedded deployment on Raspberry Pi 5 with custom physical GPIO controls, a 16x2 I2C LCD character display, and passive buzzer audio output, the OS abstracts hardware interactions to provide a modular multi-game platform.
 
-Featuring **Snake**, **Pong**, and **Tetris** as fully playable platform games, **SaveManager** with atomic JSON writes and corruption recovery, live color palette **Theme Engine**, and beatable single-player **AI Opponent**, the platform supports both 2-Player Local Keyboard mode and 4-button Raspberry Pi GPIO Arcade mode.
+Featuring an **Animated Terminal CRT Boot Sequence**, **Snake**, **Pong**, and **Tetris** as fully playable platform games, persistent **Achievement System**, toast **Notification System**, standalone **Statistics Screen**, **SaveManager** with atomic JSON writes and corruption recovery, live color palette **Theme Engine**, and beatable single-player **AI Opponent**, the platform supports both 2-Player Local Keyboard mode and 4-button Raspberry Pi GPIO Arcade mode.
 
 ---
 
 ## 📄 Resume Bullet Point
 
 > **Embedded Software Engineer / Python Developer**
-> - Designed and developed **Pi Arcade OS**, a modular embedded arcade platform for Raspberry Pi 5 using Python 3.13, Pygame, and `gpiozero`. Implemented thread-safe input queuing (`queue.Queue`), hardware service abstractions for 16x2 I2C LCD displays and non-blocking buzzer tones, an extensible game registry pattern, beatable AI opponent algorithms, 7-bag Tetris randomizer, atomic JSON save file recovery, and a 100% hardware-isolated test suite.
+> - Designed and developed **Pi Arcade OS**, a modular embedded arcade platform for Raspberry Pi 5 using Python 3.13, Pygame, and `gpiozero`. Implemented thread-safe input queuing (`queue.Queue`), an animated CRT terminal boot sequence, persistent Achievement System, toast Notification System, standalone Statistics Screen, 16x2 I2C LCD display drivers, non-blocking PCM buzzer audio synthesis, an extensible game registry pattern, beatable AI opponent algorithms, 7-bag Tetris randomizer, atomic JSON save file recovery, and a 100% hardware-isolated unit test suite with 76 passing tests.
 
 ---
 
 ## Key Technical Features
 
 - **Decoupled Architecture**: Game logic (`ArcadeGame`) is completely isolated from hardware input reading, display drivers, and audio synthesis.
+- **Animated CRT Boot Sequence**: Renders retro terminal diagnostics displaying subsystem checks (`✓`), installed games catalog scanning, boot sound synthesis, and smooth alpha fade-out transition.
+- **Persistent Achievement System**: Tracks 8 persistent arcade achievements (`First Launch`, `First Snake Game`, `First Pong Win`, `First Tetris Line`, `Score 100 in Snake`, `Play 10 Games`, `Play 100 Games`, `Arcade Veteran`) saved in `save_data.json` with fanfare audio triggers.
+- **Toast Notification System**: Renders smooth popup notifications in top-right screen space with progress slides, custom icon badges, auto-fading overlays, and sound triggers.
+- **Standalone Statistics Screen**: Interactive system & gameplay metrics modal (`T` key shortcut) displaying total play time, favorite game, Snake/Pong/Tetris stats, average session length, and runtime versions.
 - **Playable Games Catalog**: Includes **Snake** (`v1.3.0`), **Pong** (`v1.0.0`), and **Tetris** (`v1.0.0`) with local keyboard mode and GPIO single-player mode.
-- **7-Bag Tetris System**: Full Tetris implementation featuring standard 7-bag piece generation, wall-kick rotations, ghost piece projection, soft/hard drops, line clear animations, scoring tables, and level progression.
+- **7-Bag Tetris System**: Full Tetris implementation featuring standard 7-bag piece generation, SRS wall-kick rotations, ghost piece projection, soft/hard drops, line clear animations, scoring tables, and level progression.
 - **Beatable AI Opponent**: Dynamic Pong AI with difficulty levels (`Easy`, `Normal`, `Hard`), reaction delays, target error variation, and smooth paddle tracking.
 - **Crash-Resilient SaveManager**: Atomic file writes via temporary files and `os.replace` prevent zero-byte corruptions. Automatic backup recovery (`save_data.json.bak`) restores state cleanly.
 - **Interactive Settings & Live Themes**: Live theme palette switching (`Slate Dark`, `Cyberpunk Gold`, `Retro Monokai`, `Neon Synthwave`), multi-channel volume sliders, difficulty, and control schemes.
 - **Thread-Safe Input Queuing**: Multi-threaded `gpiozero` physical button callbacks enqueue actions into a thread-safe `queue.Queue`, eliminating thread race conditions on Pygame's main loop.
 - **Dual Display Output**: High-resolution desktop Pygame rendering synced with real-time score and navigation output on a physical 16x2 I2C character LCD (`0x27`).
-- **Non-Blocking Tone Synthesis**: Asynchronous daemon threads trigger passive buzzer audio feedback without dropping frames from the 60 FPS rendering pipeline.
-- **Graceful Hardware Degradation**: Runs seamlessly in silent keyboard-only mode on macOS development environments or headless CI runners.
+- **Non-Blocking Tone Synthesis**: Asynchronous daemon threads trigger passive buzzer audio feedback across 30 sound events without dropping frames from the 60 FPS rendering pipeline.
 
 ---
 
@@ -85,8 +89,12 @@ pi-arcade-os/
 ├── src/
 │   ├── __init__.py
 │   ├── main.py
+│   ├── version.py
 │   ├── config.py
 │   ├── launcher.py
+│   ├── boot_sequence.py
+│   ├── notification_manager.py
+│   ├── achievement_manager.py
 │   ├── save_manager.py
 │   ├── settings_manager.py
 │   ├── game_registry.py
@@ -104,13 +112,17 @@ pi-arcade-os/
 │       └── diagnostics.py
 └── tests/
     ├── __init__.py
+    ├── test_achievements.py
     ├── test_audio.py
+    ├── test_boot_and_stats.py
     ├── test_game_registry.py
     ├── test_launcher.py
+    ├── test_notifications.py
+    ├── test_pong.py
     ├── test_save_manager.py
     ├── test_settings.py
-    ├── test_pong.py
-    └── test_tetris.py
+    ├── test_tetris.py
+    └── test_version.py
 ```
 
 ---
@@ -132,7 +144,7 @@ python3 -m src.main --gpio
 python3 -m src.main --diagnostics
 ```
 
-### 4. Run Test Suite
+### 4. Run Test Suite (76 Passing Tests)
 ```bash
 python3 -m unittest discover -s tests -p "test_*.py" -v
 # or
@@ -148,6 +160,7 @@ pytest tests/ -v
 | **Launcher** | Navigate Menu | `Up` / `Down` or `W` / `S` | `GPIO27` / `GPIO22` |
 | **Launcher** | Launch Selected | `Enter` / `Space` or `Right` | `GPIO24` |
 | **Launcher** | Settings Menu | `S` Key | - |
+| **Launcher** | Statistics Screen | `T` Key | - |
 | **Snake** | Change Direction | `Arrows` / `WASD` | `GPIO27`, `22`, `23`, `24` |
 | **Pong (2P)** | Player 1 Paddle | `W` / `S` | `GPIO27` / `GPIO22` |
 | **Pong (2P)** | Player 2 Paddle | `Up` / `Down` | (AI in GPIO mode) |
@@ -169,5 +182,6 @@ pytest tests/ -v
 - [x] **Sprint 2.4**: Atomic Save System & Corruption Recovery
 - [x] **Sprint 3**: Pong Game + AI Opponent + Sound & LCD Extensions
 - [x] **Sprint 5**: Tetris Game Implementation + 7-Bag System + Line Clears
+- [x] **Sprint 5 (OS Upgrade)**: Animated Boot Sequence + Achievement Manager + Notification System + Statistics View + Version Manager
 - [ ] **Sprint 6**: Breakout Game Implementation
 - [ ] **Sprint 7**: Raspberry Pi Systemd Kiosk Autostart

@@ -227,9 +227,17 @@ class AudioManager:
         self._sounds[SoundType.TETRIS_LEVEL_UP] = self._synthesize_pcm_wave(
             [(440.0, 0.06), (554.37, 0.06), (659.25, 0.12)]
         )
-        self._sounds[SoundType.TETRIS_GAME_OVER] = self._synthesize_pcm_wave(
-            [(320.0, 0.08), (240.0, 0.08), (160.0, 0.16)]
+        # Pre-synthesize Sprint 5 System sound effects
+        self._sounds[SoundType.BOOT] = self._synthesize_pcm_wave(
+            [(330.0, 0.05), (440.0, 0.05), (554.37, 0.05), (659.25, 0.14)]
         )
+        self._sounds[SoundType.MENU_BACK] = self._synthesize_pcm_wave([(440.0, 0.04), (330.0, 0.06)])
+        self._sounds[SoundType.NOTIFICATION] = self._synthesize_pcm_wave([(880.0, 0.04), (1174.66, 0.06)])
+        self._sounds[SoundType.ACHIEVEMENT] = self._synthesize_pcm_wave(
+            [(523.25, 0.06), (659.25, 0.06), (783.99, 0.06), (1046.50, 0.22)]
+        )
+        self._sounds[SoundType.STATS_OPEN] = self._synthesize_pcm_wave([(440.0, 0.05), (880.0, 0.08)])
+        self._sounds[SoundType.SETTINGS_SAVE] = self._synthesize_pcm_wave([(659.25, 0.05), (880.0, 0.08)])
 
     def _get_effective_volume(self) -> float:
         """Returns effective volume considering mute status and channel multipliers."""
@@ -349,6 +357,12 @@ class AudioManager:
             SoundType.TETRIS_TETRIS_CLEAR: [(523, 0.06), (659, 0.06), (784, 0.06), (1046, 0.16)],
             SoundType.TETRIS_LEVEL_UP: [(440, 0.06), (554, 0.06), (659, 0.12)],
             SoundType.TETRIS_GAME_OVER: [(320, 0.08), (240, 0.08), (160, 0.16)],
+            SoundType.BOOT: [(330, 0.05), (440, 0.05), (554, 0.05), (659, 0.14)],
+            SoundType.MENU_BACK: [(440, 0.04), (330, 0.06)],
+            SoundType.NOTIFICATION: [(880, 0.04), (1174, 0.06)],
+            SoundType.ACHIEVEMENT: [(523, 0.06), (659, 0.06), (784, 0.06), (1046, 0.22)],
+            SoundType.STATS_OPEN: [(440, 0.05), (880, 0.08)],
+            SoundType.SETTINGS_SAVE: [(659, 0.05), (880, 0.08)],
         }
 
         seq = tones_map.get(sound_type, [(440, 0.05)])
@@ -373,6 +387,9 @@ class AudioManager:
     def play_menu_select(self) -> None:
         self.play(SoundType.MENU_SELECT)
 
+    def play_menu_back(self) -> None:
+        self.play(SoundType.MENU_BACK)
+
     def play_error(self) -> None:
         self.play(SoundType.ERROR)
 
@@ -390,6 +407,21 @@ class AudioManager:
 
     def play_startup_jingle(self) -> None:
         self.play(SoundType.STARTUP_JINGLE)
+
+    def play_boot(self) -> None:
+        self.play(SoundType.BOOT)
+
+    def play_notification(self) -> None:
+        self.play(SoundType.NOTIFICATION)
+
+    def play_achievement(self) -> None:
+        self.play(SoundType.ACHIEVEMENT)
+
+    def play_stats_open(self) -> None:
+        self.play(SoundType.STATS_OPEN)
+
+    def play_settings_save(self) -> None:
+        self.play(SoundType.SETTINGS_SAVE)
 
     def play_paddle_hit(self) -> None:
         self.play(SoundType.PADDLE_HIT)

@@ -1,10 +1,11 @@
 """
 Launcher module for Pi Arcade OS.
 
-Manages top-level arcade state transitions (MENU, PLAYING, SHOWING_NOTICE, SHOWING_SETTINGS, EXITING),
+Manages top-level arcade state transitions (MENU, PLAYING, SHOWING_NOTICE, SHOWING_SETTINGS, SHOWING_STATS, EXITING),
 animated background particles, multi-layered glowing title banners, smooth fade-in transitions,
 game selection cards with hardware support badges (GPIO, LCD, Audio, Keyboard),
-gameplay statistics (Snake, Pong, and Tetris), and interactive Settings Subsystem UI.
+gameplay statistics (Snake, Pong, and Tetris), interactive Settings Subsystem,
+System Statistics modal view, Achievement System popups, and Toast Notification overlay.
 Supports Python 3.9+ typing.
 """
 
@@ -12,6 +13,7 @@ from enum import Enum
 import logging
 import math
 import random
+import sys
 from typing import Optional, List, Dict, Tuple
 import pygame
 
@@ -28,8 +30,11 @@ from src.config import (
     PARTICLE_COUNT,
     FADE_IN_DURATION,
 )
+from src.version import VERSION, BUILD, AUTHOR, get_version_info
 from src.save_manager import SaveManager
 from src.settings_manager import SettingsManager
+from src.notification_manager import NotificationManager
+from src.achievement_manager import AchievementManager
 from src.game_registry import GameRegistry, ComingSoonError
 from src.game_interface import ArcadeGame
 from src.hardware.display import DisplayManager
@@ -44,6 +49,7 @@ class LauncherState(Enum):
     PLAYING = "PLAYING"
     SHOWING_NOTICE = "SHOWING_NOTICE"
     SHOWING_SETTINGS = "SHOWING_SETTINGS"
+    SHOWING_STATS = "SHOWING_STATS"
     EXITING = "EXITING"
 
 
@@ -101,22 +107,24 @@ class Launcher:
         audio_manager: Optional[AudioManager] = None,
         settings_manager: Optional[SettingsManager] = None,
         save_manager: Optional[SaveManager] = None,
+        notification_manager: Optional[NotificationManager] = None,
+        achievement_manager: Optional[AchievementManager] = None,
     ) -> None:
         """
-        Initializes Launcher with registered games and hardware services.
-
-        Args:
-            registry: Configured GameRegistry containing playable games.
-            display_manager: DisplayManager instance for LCD updates.
-            audio_manager: AudioManager instance for sound effects.
-            settings_manager: SettingsManager instance for persistent settings.
-            save_manager: SaveManager instance for persistent user stats.
+        Initializes Launcher with registered games, hardware services, and OS features.
         """
         self._registry: GameRegistry = registry
         self._display_manager: Optional[DisplayManager] = display_manager
         self._audio_manager: Optional[AudioManager] = audio_manager
         self._save_manager: SaveManager = save_manager or SaveManager()
         self._settings_manager: SettingsManager = settings_manager or SettingsManager(save_manager=self._save_manager)
+
+        self._notification_manager: NotificationManager = notification_manager or NotificationManager()
+        self._achievement_manager: AchievementManager = achievement_manager or AchievementManager(
+            save_manager=self._save_manager,
+            notification_manager=self._notification_manager,
+            audio_manager=self._audio_manager,
+        )
 
         self._state: LauncherState = LauncherState.MENU
         self._selected_index: int = 0
@@ -153,6 +161,16 @@ class Launcher:
         """Returns the current menu selection index."""
         return self._selected_index
 
+    @property
+    def notification_manager(self) -> NotificationManager:
+        """Returns the active NotificationManager instance."""
+        return self._notification_manager
+
+    @property
+    def achievement_manager(self) -> AchievementManager:
+        """Returns the active AchievementManager instance."""
+        return self._achievement_manager
+
     def _get_colors(self) -> Dict[str, Tuple[int, int, int]]:
         """Returns active theme colors."""
         return self._settings_manager.get_theme_colors()
@@ -163,6 +181,12 @@ class Launcher:
         self._settings_selected_index = 0
         if self._audio_manager:
             self._audio_manager.play_menu_move()
+
+    def open_stats_view(self) -> None:
+        """Opens the System Statistics & Version metadata view modal."""
+        self._state = LauncherState.SHOWING_STATS
+        if self._audio_manager:
+            self._audio_manager.play_stats_open()
 
     def _get_games_list(self) -> List[Dict[str, object]]:
         """Helper to get list of registered game metadata."""
@@ -181,9 +205,6 @@ class Launcher:
     def handle_action(self, action: Action) -> None:
         """
         Processes a normalized Action event based on current launcher state.
-
-        Args:
-            action: Mapped Action enum from InputManager.
         """
         if self._state == LauncherState.SHOWING_NOTICE:
             self._state = LauncherState.MENU
@@ -195,6 +216,13 @@ class Launcher:
             self._handle_settings_action(action)
             return
 
+        if self._state == LauncherState.SHOWING_STATS:
+            if action in (Action.BACK, Action.QUIT, Action.SELECT, Action.LEFT):
+                self._state = LauncherState.MENU
+                if self._audio_manager:
+                    self._audio_manager.play_menu_back()
+            return
+
         if self._state == LauncherState.MENU:
             self._handle_menu_action(action)
         elif self._state == LauncherState.PLAYING and self._active_game:
@@ -203,9 +231,6 @@ class Launcher:
     def handle_pygame_event(self, event: pygame.event.Event) -> None:
         """
         Processes raw Pygame events.
-
-        Args:
-            event: Pygame Event object.
         """
         if event.type == pygame.QUIT:
             self._state = LauncherState.EXITING
@@ -221,7 +246,19 @@ class Launcher:
             if event.key in (pygame.K_ESCAPE, pygame.K_q):
                 self._state = LauncherState.MENU
                 if self._audio_manager:
-                    self._audio_manager.play_menu_move()
+                    self._audio_manager.play_menu_back()
+                return
+
+        if self._state == LauncherState.SHOWING_STATS and event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_ESCAPE, pygame.K_q, pygame.K_RETURN, pygame.K_SPACE):
+                self._state = LauncherState.MENU
+                if self._audio_manager:
+                    self._audio_manager.play_menu_back()
+                return
+
+        if self._state == LauncherState.MENU and event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_t:
+                self.open_stats_view()
                 return
 
         if self._state == LauncherState.PLAYING and self._active_game:
@@ -276,6 +313,12 @@ class Launcher:
             if idx == 0:
                 self._settings_manager.master_volume = max(0.0, min(1.0, self._settings_manager.master_volume + step * 0.05))
                 self._settings_manager.save()
+                self._notification_manager.notify(
+                    "Volume Adjusted",
+                    f"Master Volume: {int(self._settings_manager.master_volume * 100)}%",
+                    icon="🔊",
+                    color=(59, 130, 246),
+                )
             elif idx == 1:
                 self._settings_manager.music_volume = max(0.0, min(1.0, self._settings_manager.music_volume + step * 0.05))
                 self._settings_manager.save()
@@ -287,6 +330,12 @@ class Launcher:
                 self._settings_manager.save()
             elif idx == 4:
                 self._settings_manager.cycle_theme(step)
+                self._notification_manager.notify(
+                    "Theme Applied",
+                    f"Active Theme: {self._settings_manager.theme}",
+                    icon="🎨",
+                    color=(168, 85, 247),
+                )
             elif idx == 5:
                 self._settings_manager.cycle_difficulty(step)
             elif idx == 6:
@@ -294,17 +343,29 @@ class Launcher:
             elif idx == 7:
                 self._settings_manager.reset_high_scores()
                 self._settings_toast = "High Scores Cleared!"
+                self._notification_manager.notify(
+                    "Stats Cleared",
+                    "All game high scores reset to 0.",
+                    icon="🧹",
+                    color=(239, 68, 68),
+                )
             elif idx == 8:
                 self._settings_manager.restore_defaults()
                 self._settings_toast = "Defaults Restored!"
+                self._notification_manager.notify(
+                    "Defaults Restored",
+                    "All system settings restored to default.",
+                    icon="⚙️",
+                    color=(34, 197, 94),
+                )
 
             if self._audio_manager:
-                self._audio_manager.play_menu_move()
+                self._audio_manager.play_settings_save()
 
         elif action in (Action.BACK, Action.QUIT):
             self._state = LauncherState.MENU
             if self._audio_manager:
-                self._audio_manager.play_menu_move()
+                self._audio_manager.play_menu_back()
 
     def launch_selected_game(self) -> None:
         """Launches the game currently highlighted in the menu."""
@@ -330,8 +391,9 @@ class Launcher:
         if self._audio_manager:
             self._audio_manager.play_menu_select()
 
-        # Record game start in SaveManager
+        # Record game start in SaveManager and check achievements
         self._save_manager.record_game_start(game_id)
+        self._achievement_manager.check_achievements("game_start", {"game_id": game_id})
 
         try:
             self._active_game = self._registry.create_instance(game_id)
@@ -355,10 +417,12 @@ class Launcher:
             self._state = LauncherState.SHOWING_NOTICE
 
     def update(self, delta_time: float) -> None:
-        """Updates animation timers, background particles, and active game state."""
+        """Updates animation timers, notifications, particles, and active game state."""
         self._cursor_timer += delta_time
         if self._fade_timer < FADE_IN_DURATION:
             self._fade_timer += delta_time
+
+        self._notification_manager.update(delta_time)
 
         for particle in self._particles:
             particle.update(delta_time)
@@ -372,6 +436,8 @@ class Launcher:
                 self._active_game = None
                 self._state = LauncherState.MENU
                 self._update_lcd_menu()
+                # Check achievements after game session ends
+                self._achievement_manager.check_achievements("game_end")
 
     def draw(self, surface: pygame.Surface) -> None:
         """Renders launcher menu, background particles, glowing title, game cards, and overlays."""
@@ -379,6 +445,7 @@ class Launcher:
 
         if self._state == LauncherState.PLAYING and self._active_game:
             self._active_game.draw(surface)
+            self._notification_manager.draw(surface)
             return
 
         surface.fill(colors["bg"])
@@ -410,7 +477,9 @@ class Launcher:
 
         # Profile Badge Header
         player_lbl = font_desc.render(f"Player: {self._save_manager.player_name}", True, colors["accent"])
+        ver_lbl = font_desc.render(f"v{VERSION}", True, colors["text_muted"])
         surface.blit(player_lbl, (25, 42))
+        surface.blit(ver_lbl, (SCREEN_WIDTH - ver_lbl.get_width() - 25, 42))
 
         games = self._get_games_list()
         if not games:
@@ -510,7 +579,9 @@ class Launcher:
                     badge_x += b_w + 8
 
         # Footer Instruction Bar
-        footer_txt = font_footer.render("Enter = Launch   |   ESC = Exit   |   S = Settings", True, colors["text_primary"])
+        footer_txt = font_footer.render(
+            "Enter = Launch   |   ESC = Exit   |   S = Settings   |   T = Stats", True, colors["text_primary"]
+        )
         nav_sub = font_desc.render("Controls: ↑ ↓ / W S / GPIO 27 & 22", True, colors["text_muted"])
 
         surface.blit(footer_txt, (SCREEN_WIDTH // 2 - footer_txt.get_width() // 2, SCREEN_HEIGHT - 45))
@@ -529,6 +600,11 @@ class Launcher:
             self._draw_notice_modal(surface, colors)
         elif self._state == LauncherState.SHOWING_SETTINGS:
             self._draw_settings_modal(surface, colors)
+        elif self._state == LauncherState.SHOWING_STATS:
+            self._draw_stats_modal(surface, colors)
+
+        # Always render active toast notifications on top
+        self._notification_manager.draw(surface)
 
     def _draw_notice_modal(self, surface: pygame.Surface, colors: Dict[str, Tuple[int, int, int]]) -> None:
         """Renders coming-soon notice modal overlay."""
@@ -615,11 +691,9 @@ class Launcher:
             elif idx == 6:
                 val_str = f"◄ {self._settings_manager.controls} ►"
             elif idx == 7:
-                self._settings_manager.reset_high_scores()
-                self._settings_toast = "High Scores Cleared!"
+                val_str = "Press SELECT to Clear"
             elif idx == 8:
-                self._settings_manager.restore_defaults()
-                self._settings_toast = "Defaults Restored!"
+                val_str = "Press SELECT to Reset"
 
             val_txt = font_val.render(val_str, True, colors["accent"] if is_selected else colors["text_muted"])
             surface.blit(val_txt, (r_rect.right - val_txt.get_width() - 15, r_rect.top + 6))
@@ -628,6 +702,106 @@ class Launcher:
         if self._settings_toast:
             footer_str = self._settings_toast
         dismiss_txt = font_sub.render(footer_str, True, colors["text_muted"])
+        surface.blit(dismiss_txt, (modal_rect.centerx - dismiss_txt.get_width() // 2, modal_rect.bottom - 26))
+
+    def _draw_stats_modal(self, surface: pygame.Surface, colors: Dict[str, Tuple[int, int, int]]) -> None:
+        """Renders System Statistics & Version Metadata overlay modal."""
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((15, 23, 42, 235))
+        surface.blit(overlay, (0, 0))
+
+        modal_w, modal_h = 680, 490
+        modal_rect = pygame.Rect(
+            SCREEN_WIDTH // 2 - modal_w // 2,
+            SCREEN_HEIGHT // 2 - modal_h // 2,
+            modal_w,
+            modal_h,
+        )
+        pygame.draw.rect(surface, colors["surface"], modal_rect, border_radius=16)
+        pygame.draw.rect(surface, (59, 130, 246), modal_rect, width=3, border_radius=16)
+
+        font_title = pygame.font.SysFont("sans-serif", 28, bold=True)
+        font_section = pygame.font.SysFont("sans-serif", 18, bold=True)
+        font_label = pygame.font.SysFont("sans-serif", 15)
+        font_val = pygame.font.SysFont("sans-serif", 15, bold=True)
+        font_sub = pygame.font.SysFont("sans-serif", 15)
+
+        t_txt = font_title.render("📊 System & Gameplay Statistics", True, (59, 130, 246))
+        surface.blit(t_txt, (modal_rect.centerx - t_txt.get_width() // 2, modal_rect.top + 18))
+
+        # Column 1: Gameplay Stats
+        col1_x = modal_rect.left + 30
+        y1 = modal_rect.top + 65
+
+        sec1 = font_section.render("🎮 Gameplay Metrics", True, colors["accent"])
+        surface.blit(sec1, (col1_x, y1))
+        y1 += 28
+
+        total_time = self._save_manager.total_play_time
+        time_str = f"{int(total_time // 3600)}h {int((total_time % 3600) // 60)}m {int(total_time % 60)}s" if total_time >= 60 else f"{total_time:.1f}s"
+
+        stats1 = [
+            ("Total Play Time:", time_str),
+            ("Games Played:", str(self._save_manager.get_total_games_played())),
+            ("Favorite Game:", self._save_manager.get_favorite_game()),
+            ("Avg Session Length:", f"{self._save_manager.get_average_session_length():.1f}s"),
+            ("Snake High Score:", str(self._save_manager.get_high_score("snake"))),
+            ("Longest Snake Time:", f"{self._save_manager.get_best_time('snake'):.1f}s"),
+            ("Pong Wins / Losses:", f"{self._save_manager.get_wins('pong')} W / {self._save_manager.get_losses('pong')} L"),
+            ("Tetris High Score:", str(self._save_manager.get_high_score("tetris"))),
+            ("Tetris Lines Cleared:", str(self._save_manager.get_total_lines("tetris"))),
+        ]
+
+        for lbl, val in stats1:
+            l_txt = font_label.render(lbl, True, colors["text_primary"])
+            v_txt = font_val.render(val, True, colors["accent"])
+            surface.blit(l_txt, (col1_x, y1))
+            surface.blit(v_txt, (col1_x + 180, y1))
+            y1 += 25
+
+        # Column 2: System Metadata & Achievements
+        col2_x = modal_rect.left + 360
+        y2 = modal_rect.top + 65
+
+        sec2 = font_section.render("💻 System & Versions", True, colors["accent"])
+        surface.blit(sec2, (col2_x, y2))
+        y2 += 28
+
+        stats2 = [
+            ("OS Version:", f"v{VERSION}"),
+            ("Build Target:", BUILD),
+            ("Python Version:", sys.version.split()[0]),
+            ("Pygame Version:", pygame.__version__),
+            ("Save File Version:", "1.0.0"),
+            ("Author:", AUTHOR),
+        ]
+
+        for lbl, val in stats2:
+            l_txt = font_label.render(lbl, True, colors["text_primary"])
+            v_txt = font_val.render(val, True, colors["text_muted"])
+            surface.blit(l_txt, (col2_x, y2))
+            surface.blit(v_txt, (col2_x + 145, y2))
+            y2 += 25
+
+        y2 += 10
+        sec3 = font_section.render("🏆 Unlocked Achievements", True, (234, 179, 8))
+        surface.blit(sec3, (col2_x, y2))
+        y2 += 28
+
+        achievements = self._achievement_manager.get_all_achievements()
+        unlocked_count = sum(1 for a in achievements if a["unlocked"])
+        summary_txt = font_val.render(f"{unlocked_count} / {len(achievements)} Unlocked", True, (234, 179, 8))
+        surface.blit(summary_txt, (col2_x, y2))
+        y2 += 24
+
+        for ach in achievements[:4]:  # Show top 4 in compact column
+            status_symbol = "✓" if ach["unlocked"] else "🔒"
+            a_col = (34, 197, 94) if ach["unlocked"] else colors["text_muted"]
+            a_txt = font_label.render(f"{status_symbol} {ach['icon']} {ach['title']}", True, a_col)
+            surface.blit(a_txt, (col2_x, y2))
+            y2 += 22
+
+        dismiss_txt = font_sub.render("Press ESC / Enter / BACK to Return", True, colors["text_muted"])
         surface.blit(dismiss_txt, (modal_rect.centerx - dismiss_txt.get_width() // 2, modal_rect.bottom - 26))
 
     def cleanup(self) -> None:
