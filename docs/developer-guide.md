@@ -18,13 +18,13 @@ Guidelines for contributing code, adding new arcade games, and maintaining engin
 ## Shared Platform Integration Standards
 
 ### 1. Save Subsystem (`SaveManager`)
-All games must delegate score, wins, losses, play time, and statistics recording to `SaveManager` (`src/save_manager.py`). Use helper methods such as `record_game_session()` or `record_pong_session()`.
+All games must delegate score, wins, losses, total lines, levels, play time, and statistics recording to `SaveManager` (`src/save_manager.py`). Use helper methods such as `record_game_session()`, `record_pong_session()`, or `record_tetris_session()`.
 
 ### 2. Audio Engine (`AudioManager`)
-Trigger non-blocking audio feedback by calling `audio_manager.play(SoundType.EVENT)`. Supported events include `PADDLE_HIT`, `WALL_BOUNCE`, `POINT_SCORED`, `MATCH_START`, `PAUSE`, `VICTORY`, `DEFEAT`, `SNAKE_EAT`, and `GAME_OVER`.
+Trigger non-blocking audio feedback by calling `audio_manager.play(SoundType.EVENT)`. Supported events include `SNAKE_EAT`, `PADDLE_HIT`, `TETRIS_ROTATE`, `TETRIS_LOCK`, `TETRIS_LINE_CLEAR`, `TETRIS_TETRIS_CLEAR`, `TETRIS_LEVEL_UP`, `PAUSE`, and `GAME_OVER`.
 
 ### 3. Display Integration (`DisplayManager`)
-Update real-time 16x2 I2C LCD lines via `display_manager.show_pong_score()` or `display_manager.write_lines()`. Display calls must fail gracefully without throwing uncaught exceptions.
+Update real-time 16x2 I2C LCD lines via `display_manager.show_tetris_score()`, `display_manager.show_pong_score()`, or `display_manager.write_lines()`. Display calls must fail gracefully without throwing uncaught exceptions.
 
 ### 4. Dynamic Theme Palettes (`SettingsManager`)
 Sample surface and font colors from `settings_manager.get_theme_colors()` during `draw()` calls to support live theme palette switching (`Slate Dark`, `Cyberpunk Gold`, `Retro Monokai`, `Neon Synthwave`).

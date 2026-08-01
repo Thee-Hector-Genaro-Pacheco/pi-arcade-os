@@ -8,7 +8,7 @@ Supports Python 3.9+ typing.
 
 from enum import Enum
 import os
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, List, Any
 
 
 class Action(Enum):
@@ -41,6 +41,16 @@ class SoundType(Enum):
     PAUSE = "PAUSE"
     VICTORY = "VICTORY"
     DEFEAT = "DEFEAT"
+    # Tetris sound events
+    TETRIS_MOVE = "TETRIS_MOVE"
+    TETRIS_ROTATE = "TETRIS_ROTATE"
+    TETRIS_SOFT_DROP = "TETRIS_SOFT_DROP"
+    TETRIS_HARD_DROP = "TETRIS_HARD_DROP"
+    TETRIS_LOCK = "TETRIS_LOCK"
+    TETRIS_LINE_CLEAR = "TETRIS_LINE_CLEAR"
+    TETRIS_TETRIS_CLEAR = "TETRIS_TETRIS_CLEAR"
+    TETRIS_LEVEL_UP = "TETRIS_LEVEL_UP"
+    TETRIS_GAME_OVER = "TETRIS_GAME_OVER"
 
 
 # Display & Window Settings
@@ -178,6 +188,148 @@ PONG_AI_CONFIG: Dict[str, Dict[str, Any]] = {
         "delay": 0.02,
         "target_error": 5.0,
     },
+}
+
+# Tetris Specific Configuration
+TETRIS_BOARD_COLS: int = 10
+TETRIS_BOARD_ROWS: int = 20  # Visible rows
+TETRIS_SPAWN_HIDDEN_ROWS: int = 2  # Total grid height = 22 rows
+TETRIS_CELL_SIZE: int = 24
+
+# Base scoring table multiplied by level
+TETRIS_BASE_SCORES: Dict[int, int] = {
+    1: 100,  # Single
+    2: 300,  # Double
+    3: 500,  # Triple
+    4: 800,  # Tetris
+}
+
+TETRIS_SOFT_DROP_POINTS: int = 1
+TETRIS_HARD_DROP_POINTS: int = 2
+
+# Tetromino Colors (RGB)
+TETRIS_PIECE_COLORS: Dict[str, Tuple[int, int, int]] = {
+    "I": (6, 182, 212),    # Cyan
+    "O": (250, 204, 21),   # Yellow
+    "T": (168, 85, 247),   # Purple
+    "S": (34, 197, 94),    # Green
+    "Z": (239, 68, 68),    # Red
+    "J": (59, 130, 246),   # Blue
+    "L": (249, 115, 22),   # Orange
+}
+
+# Tetromino Shape Matrix Definitions (4x4 or 3x3 rotational matrices)
+TETRIS_SHAPES: Dict[str, List[List[List[int]]]] = {
+    "I": [
+        [[0, 0, 0, 0],
+         [1, 1, 1, 1],
+         [0, 0, 0, 0],
+         [0, 0, 0, 0]],
+
+        [[0, 0, 1, 0],
+         [0, 0, 1, 0],
+         [0, 0, 1, 0],
+         [0, 0, 1, 0]],
+
+        [[0, 0, 0, 0],
+         [0, 0, 0, 0],
+         [1, 1, 1, 1],
+         [0, 0, 0, 0]],
+
+        [[0, 1, 0, 0],
+         [0, 1, 0, 0],
+         [0, 1, 0, 0],
+         [0, 1, 0, 0]],
+    ],
+    "O": [
+        [[1, 1],
+         [1, 1]],
+    ],
+    "T": [
+        [[0, 1, 0],
+         [1, 1, 1],
+         [0, 0, 0]],
+
+        [[0, 1, 0],
+         [0, 1, 1],
+         [0, 1, 0]],
+
+        [[0, 0, 0],
+         [1, 1, 1],
+         [0, 1, 0]],
+
+        [[0, 1, 0],
+         [1, 1, 0],
+         [0, 1, 0]],
+    ],
+    "S": [
+        [[0, 1, 1],
+         [1, 1, 0],
+         [0, 0, 0]],
+
+        [[0, 1, 0],
+         [0, 1, 1],
+         [0, 0, 1]],
+
+        [[0, 0, 0],
+         [0, 1, 1],
+         [1, 1, 0]],
+
+        [[1, 0, 0],
+         [1, 1, 0],
+         [0, 1, 0]],
+    ],
+    "Z": [
+        [[1, 1, 0],
+         [0, 1, 1],
+         [0, 0, 0]],
+
+        [[0, 0, 1],
+         [0, 1, 1],
+         [0, 1, 0]],
+
+        [[0, 0, 0],
+         [1, 1, 0],
+         [0, 1, 1]],
+
+        [[0, 1, 0],
+         [1, 1, 0],
+         [1, 0, 0]],
+    ],
+    "J": [
+        [[1, 0, 0],
+         [1, 1, 1],
+         [0, 0, 0]],
+
+        [[0, 1, 1],
+         [0, 1, 0],
+         [0, 1, 0]],
+
+        [[0, 0, 0],
+         [1, 1, 1],
+         [0, 0, 1]],
+
+        [[0, 1, 0],
+         [0, 1, 0],
+         [1, 1, 0]],
+    ],
+    "L": [
+        [[0, 0, 1],
+         [1, 1, 1],
+         [0, 0, 0]],
+
+        [[0, 1, 0],
+         [0, 1, 0],
+         [0, 1, 1]],
+
+        [[0, 0, 0],
+         [1, 1, 1],
+         [1, 0, 0]],
+
+        [[1, 1, 0],
+         [0, 1, 0],
+         [0, 1, 0]],
+    ],
 }
 
 # Launcher Animation Settings

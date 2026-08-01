@@ -55,7 +55,19 @@ Diagnostic strategies and common issue resolutions for **Pi Arcade OS**.
 
 ---
 
-## 4. Headless CI / macOS Execution
+## 4. Tetris Game & Performance Troubleshooting
+
+### Issue: Pieces lock too quickly or rotation near walls fails
+
+**Cause**: Gravity speed at higher levels or lock delay timing adjustments.
+
+**Resolution Steps**:
+1. Check active difficulty setting in Settings menu (`S` key). "Easy" mode increases lock delay and reduces initial gravity drop speed.
+2. Verify wall kick rotation behavior: `TetrisGame` tests kick offsets `0`, `-1`, `+1`, `-2`, `+2`. If a piece cannot rotate even with kick offsets (e.g. `I` piece against a wall in tight vertical shaft), move the piece 1 column away from the wall before rotating.
+
+---
+
+## 5. Headless CI / macOS Execution
 
 ### Issue: `pygame.error: No available video device`
 

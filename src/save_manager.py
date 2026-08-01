@@ -44,6 +44,9 @@ class SaveManager:
         self.losses: Dict[str, int] = {}
         self.longest_rally: Dict[str, int] = {}
         self.highest_winning_score: Dict[str, int] = {}
+        self.total_lines: Dict[str, int] = {}
+        self.highest_level: Dict[str, int] = {}
+        self.tetrises_cleared: Dict[str, int] = {}
         self.settings: Dict[str, Any] = {}
 
         # Load save data from disk
@@ -63,6 +66,9 @@ class SaveManager:
             "losses": {},
             "longest_rally": {},
             "highest_winning_score": {},
+            "total_lines": {},
+            "highest_level": {},
+            "tetrises_cleared": {},
             "settings": {},
         }
 
@@ -115,6 +121,10 @@ class SaveManager:
         self.longest_rally = {str(k): int(v) for k, v in data.get("longest_rally", {}).items()}
         self.highest_winning_score = {str(k): int(v) for k, v in data.get("highest_winning_score", {}).items()}
 
+        self.total_lines = {str(k): int(v) for k, v in data.get("total_lines", {}).items()}
+        self.highest_level = {str(k): int(v) for k, v in data.get("highest_level", {}).items()}
+        self.tetrises_cleared = {str(k): int(v) for k, v in data.get("tetrises_cleared", {}).items()}
+
         if isinstance(data.get("settings"), dict):
             self.settings = data["settings"]
 
@@ -132,6 +142,9 @@ class SaveManager:
             "losses": self.losses,
             "longest_rally": self.longest_rally,
             "highest_winning_score": self.highest_winning_score,
+            "total_lines": self.total_lines,
+            "highest_level": self.highest_level,
+            "tetrises_cleared": self.tetrises_cleared,
             "settings": self.settings,
         }
 
@@ -239,6 +252,48 @@ class SaveManager:
         self.save()
         return p1_won
 
+    def record_tetris_session(
+        self, score: int, lines_cleared: int, level: int, tetrises_count: int, duration_sec: float
+    ) -> bool:
+        """
+        Records completed Tetris session stats.
+
+        Args:
+            score: Final score achieved.
+            lines_cleared: Total lines cleared during session.
+            level: Highest level reached.
+            tetrises_count: Number of 4-line Tetris clears executed.
+            duration_sec: Session duration in seconds.
+
+        Returns:
+            True if a new high score was set.
+        """
+        game_id = "tetris"
+        is_new_high = False
+
+        current_high = self.high_scores.get(game_id, 0)
+        if score > current_high:
+            self.high_scores[game_id] = score
+            is_new_high = True
+
+        self.total_lines[game_id] = self.total_lines.get(game_id, 0) + lines_cleared
+        
+        current_lvl = self.highest_level.get(game_id, 1)
+        if level > current_lvl:
+            self.highest_level[game_id] = level
+
+        self.tetrises_cleared[game_id] = self.tetrises_cleared.get(game_id, 0) + tetrises_count
+
+        current_best = self.best_times.get(game_id, 0.0)
+        if duration_sec > current_best:
+            self.best_times[game_id] = duration_sec
+
+        self.play_times[game_id] = self.play_times.get(game_id, 0.0) + duration_sec
+        self.total_play_time += duration_sec
+
+        self.save()
+        return is_new_high
+
     def get_high_score(self, game_id: str) -> int:
         """Retrieves high score for a game ID."""
         return self.high_scores.get(game_id.strip().lower(), 0)
@@ -258,6 +313,18 @@ class SaveManager:
     def get_longest_rally(self, game_id: str) -> int:
         """Retrieves longest rally for a game ID."""
         return self.longest_rally.get(game_id.strip().lower(), 0)
+
+    def get_total_lines(self, game_id: str = "tetris") -> int:
+        """Retrieves total lines cleared for a game ID."""
+        return self.total_lines.get(game_id.strip().lower(), 0)
+
+    def get_highest_level(self, game_id: str = "tetris") -> int:
+        """Retrieves highest level reached for a game ID."""
+        return self.highest_level.get(game_id.strip().lower(), 1)
+
+    def get_tetrises(self, game_id: str = "tetris") -> int:
+        """Retrieves total 4-line Tetris clears count for a game ID."""
+        return self.tetrises_cleared.get(game_id.strip().lower(), 0)
 
     def get_best_time(self, game_id: str) -> float:
         """Retrieves best survival time for a game ID."""
@@ -286,6 +353,9 @@ class SaveManager:
             self.losses.pop(clean_id, None)
             self.longest_rally.pop(clean_id, None)
             self.highest_winning_score.pop(clean_id, None)
+            self.total_lines.pop(clean_id, None)
+            self.highest_level.pop(clean_id, None)
+            self.tetrises_cleared.pop(clean_id, None)
         else:
             self.high_scores.clear()
             self.games_played.clear()
@@ -295,6 +365,9 @@ class SaveManager:
             self.losses.clear()
             self.longest_rally.clear()
             self.highest_winning_score.clear()
+            self.total_lines.clear()
+            self.highest_level.clear()
+            self.tetrises_cleared.clear()
             self.total_play_time = 0.0
 
         self.save()

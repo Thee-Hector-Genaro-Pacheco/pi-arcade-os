@@ -1,102 +1,111 @@
 """
 Main entry point for Pi Arcade OS.
 
-Parses command line flags, initializes Pygame, SaveManager, SettingsManager, and hardware abstractions,
-registers games, runs the main execution loop, and cleans up resources on exit.
+Parses command line arguments, initializes hardware subsystems (InputManager, DisplayManager, AudioManager),
+configures GameRegistry with playable games (Snake, Pong, Tetris) and coming-soon previews (Breakout),
+initializes Launcher state machine, and runs the primary 60 FPS update and render loop.
 Supports Python 3.9+ typing.
-
-Usage:
-    python3 -m src.main
-    python3 -m src.main --gpio
-    python3 -m src.main --diagnostics
-    python3 -m src.main --no-lcd --no-audio
 """
 
 import argparse
 import logging
 import sys
-from typing import Optional, List
+from typing import Optional
 import pygame
 
-from src.config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, WINDOW_TITLE
+from src.config import FPS, SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE, Action
 from src.save_manager import SaveManager
 from src.settings_manager import SettingsManager
 from src.game_registry import GameRegistry, GameMetadata
 from src.games.snake_game import SnakeGame
 from src.games.pong_game import PongGame
+from src.games.tetris_game import TetrisGame
 from src.hardware.input_manager import InputManager
 from src.hardware.display import DisplayManager
 from src.hardware.audio import AudioManager
 from src.hardware.diagnostics import SystemDiagnostics
 from src.launcher import Launcher, LauncherState
 
-# Configure root logger
+# Configure application logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[logging.StreamHandler(sys.stdout)],
 )
+
 logger = logging.getLogger(__name__)
 
 
-def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
-    """Parses command-line arguments for Pi Arcade OS."""
-    parser = argparse.ArgumentParser(description="Pi Arcade OS - Embedded Arcade Platform for Raspberry Pi 5")
+def parse_args() -> argparse.Namespace:
+    """Parses command line flags."""
+    parser = argparse.ArgumentParser(
+        description="Pi Arcade OS - Embedded Arcade Platform for Raspberry Pi 5"
+    )
     parser.add_argument(
         "--gpio",
         action="store_true",
-        help="Enable Raspberry Pi GPIO button hardware input (BCM 27, 22, 23, 24)",
+        help="Enable Raspberry Pi GPIO button inputs (BCM 27, 22, 23, 24)",
     )
     parser.add_argument(
         "--no-lcd",
         action="store_true",
-        help="Disable 16x2 physical I2C LCD display output",
+        help="Disable physical 16x2 I2C LCD character display output",
     )
     parser.add_argument(
         "--no-audio",
         action="store_true",
-        help="Disable passive GPIO buzzer audio feedback",
+        help="Disable audio engine (Pygame mixer and passive buzzer)",
     )
     parser.add_argument(
         "--diagnostics",
         action="store_true",
-        help="Print system diagnostics report and exit",
+        help="Generate and print hardware subsystem diagnostics report and exit",
     )
-    return parser.parse_args(args)
+    return parser.parse_args()
 
 
 def main() -> None:
-    """Main application execution sequence."""
+    """Primary application entry point and 60 FPS game loop."""
     args = parse_args()
 
     logger.info("Initializing Pi Arcade OS...")
     logger.info(f"Hardware Flags: GPIO={args.gpio}, LCD={not args.no_lcd}, Audio={not args.no_audio}")
 
-    # Initialize Unified Save Subsystem & Settings Manager
+    # 1. Initialize Pygame Video Subsystem
+    pygame.init()
+    pygame.display.set_caption(WINDOW_TITLE)
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    clock = pygame.time.Clock()
+
+    # 2. Initialize Central Save & Settings Managers
     save_manager = SaveManager()
     settings_manager = SettingsManager(save_manager=save_manager)
 
-    # Initialize Hardware Managers
+    # 3. Initialize Hardware Abstractions
     input_manager = InputManager(enable_gpio=args.gpio)
     display_manager = DisplayManager(enable_lcd=not args.no_lcd)
-    audio_manager = AudioManager(enable_audio=not args.no_audio)
+    audio_manager = AudioManager(
+        enable_audio=not args.no_audio,
+        volume=settings_manager.master_volume,
+    )
 
-    # Sync audio volume channels with loaded settings
+    # Register volume listener with SettingsManager
+    def on_settings_changed(sm: SettingsManager) -> None:
+        audio_manager.set_channel_volumes(master=sm.master_volume, effects=sm.effects_volume, music=sm.music_volume)
+
+    settings_manager.add_listener(on_settings_changed)
+
+    # Apply initial channel volumes from settings
     audio_manager.set_channel_volumes(
         master=settings_manager.master_volume,
         effects=settings_manager.effects_volume,
         music=settings_manager.music_volume,
     )
 
-    # Register listener for live audio volume updates
-    settings_manager.register_listener(
-        lambda sm: audio_manager.set_channel_volumes(sm.master_volume, sm.effects_volume, sm.music_volume)
-    )
-
-    # Initialize Game Registry and register playable + coming-soon games
+    # 4. Initialize GameRegistry and Register Games
     registry = GameRegistry()
 
-    # 1. Snake Game
+    # 1. Snake Game (Playable)
     registry.register(
         "snake",
         SnakeGame,
@@ -134,23 +143,26 @@ def main() -> None:
         ),
     )
 
-    # Register preview coming-soon games for Sprint 3/4 infrastructure
-    registry.register_coming_soon(
-        GameMetadata(
+    # 3. Tetris Game (Playable Sprint 5)
+    registry.register(
+        "tetris",
+        TetrisGame,
+        metadata=GameMetadata(
             id="tetris",
             name="Tetris",
-            description="Classic block-stacking puzzle game.",
-            version="0.1.0-preview",
+            description="Classic falling-block puzzle game with rotation, line clearing, level progression, and GPIO support.",
+            version="1.0.0",
             author="Hector Pacheco",
             icon="🧱",
             supports_gpio=True,
             supports_keyboard=True,
             supports_audio=True,
             supports_lcd=True,
-            is_coming_soon=True,
-            estimated_release="Sprint 4",
-        )
+            is_coming_soon=False,
+        ),
     )
+
+    # 4. Breakout Game (Coming Soon)
     registry.register_coming_soon(
         GameMetadata(
             id="breakout",
@@ -164,11 +176,11 @@ def main() -> None:
             supports_audio=True,
             supports_lcd=True,
             is_coming_soon=True,
-            estimated_release="Sprint 4",
+            estimated_release="Sprint 6",
         )
     )
 
-    # Handle CLI diagnostics request
+    # Handle Diagnostics Mode CLI Flag
     if args.diagnostics:
         diagnostics = SystemDiagnostics(
             registry=registry,
@@ -180,16 +192,10 @@ def main() -> None:
         input_manager.cleanup()
         display_manager.cleanup()
         audio_manager.cleanup()
-        return
+        pygame.quit()
+        sys.exit(0)
 
-    # Initialize Pygame engine
-    pygame.init()
-    pygame.font.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption(WINDOW_TITLE)
-    clock = pygame.time.Clock()
-
-    # Create Launcher Controller
+    # 5. Initialize Launcher Controller
     launcher = Launcher(
         registry=registry,
         display_manager=display_manager,
@@ -199,11 +205,13 @@ def main() -> None:
     )
 
     running = True
-    try:
-        while running and launcher.state != LauncherState.EXITING:
-            delta_time = clock.tick(FPS) / 1000.0  # Seconds per frame
 
-            # 1. Process Pygame Window Events
+    # Main 60 FPS Event Loop
+    try:
+        while running:
+            delta_time = clock.tick(FPS) / 1000.0  # Convert ms to seconds
+
+            # Process Pygame Event Queue
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -221,22 +229,27 @@ def main() -> None:
                 else:
                     launcher.handle_pygame_event(event)
 
-            # 2. Process pending GPIO actions from thread-safe queue
+            # Process Asynchronous GPIO Queue Events
             while True:
                 gpio_action = input_manager.get_next_action()
                 if not gpio_action:
                     break
                 launcher.handle_action(gpio_action)
 
-            # 3. Update active state & render frame
+            # Check if launcher transitioned to EXITING state
+            if launcher.state == LauncherState.EXITING:
+                running = False
+                break
+
+            # Update launcher/active game state
             launcher.update(delta_time)
+
+            # Render active frame
             launcher.draw(screen)
             pygame.display.flip()
 
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt detected. Exiting Pi Arcade OS...")
-    except Exception as e:
-        logger.exception(f"Unhandled exception in main loop: {e}")
     finally:
         logger.info("Cleaning up resources...")
         launcher.cleanup()

@@ -12,11 +12,11 @@ All games in Pi Arcade OS must implement the `ArcadeGame` interface located in [
 
 ## Step 1: Create Game Module File
 
-Create a new Python file under `src/games/`, for example `src/games/tetris_game.py`.
+Create a new Python file under `src/games/`, for example `src/games/breakout_game.py`.
 
 ```python
 """
-Tetris Game implementation for Pi Arcade OS.
+Breakout Game implementation for Pi Arcade OS.
 """
 
 from typing import Union, Optional
@@ -29,8 +29,8 @@ from src.hardware.audio import AudioManager
 from src.hardware.display import DisplayManager
 
 
-class TetrisGame(ArcadeGame):
-    """Classic Tetris implementation for Pi Arcade OS."""
+class BreakoutGame(ArcadeGame):
+    """Classic Breakout implementation for Pi Arcade OS."""
 
     def __init__(
         self,
@@ -39,8 +39,8 @@ class TetrisGame(ArcadeGame):
         settings_manager: Optional[SettingsManager] = None,
         save_manager: Optional[SaveManager] = None,
     ) -> None:
-        self._name: str = "Tetris"
-        self._description: str = "Classic block-stacking puzzle game."
+        self._name: str = "Breakout"
+        self._description: str = "Brick-busting arcade challenge."
         self._version: str = "1.0.0"
         self._author: str = "Hector Pacheco"
         self._icon: str = "🧱"
@@ -95,7 +95,7 @@ class TetrisGame(ArcadeGame):
             return
 
     def update(self, delta_time: float) -> None:
-        """Update game physics, block drop, and line clears."""
+        """Update game physics and paddle movement."""
         if self._is_finished:
             return
 
@@ -117,18 +117,18 @@ Open [`src/main.py`](file:///Users/hectorpacheco/.gemini/antigravity-ide/scratch
 
 ```python
 from src.game_registry import GameRegistry, GameMetadata
-from src.games.tetris_game import TetrisGame
+from src.games.breakout_game import BreakoutGame
 
 # Inside main() function:
 registry = GameRegistry()
 
 registry.register(
-    "tetris",
-    TetrisGame,
+    "breakout",
+    BreakoutGame,
     metadata=GameMetadata(
-        id="tetris",
-        name="Tetris",
-        description="Classic block-stacking puzzle game.",
+        id="breakout",
+        name="Breakout",
+        description="Brick-busting arcade challenge.",
         version="1.0.0",
         author="Hector Pacheco",
         icon="🧱",
@@ -145,15 +145,15 @@ registry.register(
 
 ## Step 3: Write Unit Tests
 
-Add tests in `tests/test_tetris.py` verifying interface compliance, registration, and physics:
+Add tests in `tests/test_breakout.py` verifying interface compliance, registration, and physics:
 
 ```python
-def test_tetris_game_implements_interface():
-    from src.games.tetris_game import TetrisGame
+def test_breakout_game_implements_interface():
+    from src.games.breakout_game import BreakoutGame
     from src.game_interface import ArcadeGame
-    assert issubclass(TetrisGame, ArcadeGame)
-    game = TetrisGame()
-    assert game.name == "Tetris"
+    assert issubclass(BreakoutGame, ArcadeGame)
+    game = BreakoutGame()
+    assert game.name == "Breakout"
     assert game.is_finished is False
 ```
 
@@ -165,4 +165,4 @@ Run the launcher in keyboard mode:
 ```bash
 python3 -m src.main
 ```
-Your new game will now be listed in the **Hector Arcade OS** launcher menu alongside Snake and Pong with live hardware badges and persistent statistics!
+Your new game will now be listed in the **Hector Arcade OS** launcher menu alongside Snake, Pong, and Tetris with live hardware badges and persistent statistics!

@@ -118,6 +118,22 @@ class DisplayManager:
         """Displays Pong game over winner message on LCD."""
         self.write_lines(f"{winner_name} Wins", "R to Restart")
 
+    def show_tetris_score(self, score: int, lines: int, level: int) -> None:
+        """Displays Tetris score, lines, and level on LCD."""
+        self.write_lines(f"Score: {score}", f"L:{lines} Lv:{level}")
+
+    def show_tetris_paused(self) -> None:
+        """Displays Tetris paused message on LCD."""
+        self.write_lines("Tetris Paused", "Press Resume")
+
+    def show_tetris_game_over(self, score: int) -> None:
+        """Displays Tetris game over score on LCD."""
+        self.write_lines("Game Over", f"Score: {score}")
+
+    def show_tetris_new_high_score(self, score: int) -> None:
+        """Displays Tetris new high score message on LCD."""
+        self.write_lines("New High Score", f"Score: {score}")
+
     def clear(self) -> None:
         """Clears the LCD screen."""
         with self._lock:

@@ -65,6 +65,10 @@ class SettingsManager:
         if listener not in self._listeners:
             self._listeners.append(listener)
 
+    def add_listener(self, listener: Callable[["SettingsManager"], None]) -> None:
+        """Alias for register_listener."""
+        self.register_listener(listener)
+
     def unregister_listener(self, listener: Callable[["SettingsManager"], None]) -> None:
         """Unregisters a settings change callback."""
         if listener in self._listeners:

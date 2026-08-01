@@ -51,22 +51,29 @@ Detailed multi-sprint timeline for evolving **Pi Arcade OS** into a portfolio re
 
 ---
 
-## Sprint 4: Tetris & Puzzle Engine
-- [ ] Add `TetrisGame` implementation adhering to `ArcadeGame` contract.
-- [ ] Block rotation, line clearing, ghost piece, and level progression.
-- [ ] High score and lines cleared tracking in `SaveManager`.
+## Sprint 5: Tetris & 7-Bag Randomizer Engine (Completed)
+- [x] Add `TetrisGame` implementation adhering to `ArcadeGame` contract (`ID: tetris`, `v1.0.0`).
+- [x] 10x20 visible grid playfield with centered board rendering.
+- [x] Standard 7-bag randomizer piece generation system (`I`, `O`, `T`, `S`, `Z`, `J`, `L`).
+- [x] Clockwise & counterclockwise rotation with SRS-inspired wall kick tests.
+- [x] Active piece movement, soft drop, hard drop, lock delay, and ghost piece projection.
+- [x] Line clearing flash animations, 4-line Tetris clears, scoring table, and level progression.
+- [x] SaveManager schema extensions for high scores, lines cleared, highest level, and tetrises count.
+- [x] Real-time 16x2 I2C LCD lines (`Score: X`, `L:Y Lv:Z`, `Tetris Paused`, `Game Over`).
+- [x] 9 new sound synthesis events (`TETRIS_MOVE`, `TETRIS_ROTATE`, `TETRIS_SOFT_DROP`, `TETRIS_HARD_DROP`, `TETRIS_LOCK`, `TETRIS_LINE_CLEAR`, `TETRIS_TETRIS_CLEAR`, `TETRIS_LEVEL_UP`, `TETRIS_GAME_OVER`).
+- [x] Full unit test suite in `tests/test_tetris.py`.
 
 ---
 
-## Sprint 5: Raspberry Pi Autostart & Kiosk Mode
+## Sprint 6: Breakout & Brick-Buster Engine
+- [ ] Add `BreakoutGame` implementation adhering to `ArcadeGame` contract.
+- [ ] Paddle control, ball reflection physics, brick grid destruction, power-ups, and level clear transitions.
+- [ ] High score and bricks destroyed statistics in `SaveManager`.
+
+---
+
+## Sprint 7: Raspberry Pi Autostart & Kiosk Mode
 - [ ] Systemd service file definition (`pi-arcade.service`).
 - [ ] Custom Plymouth boot splash screen for Raspberry Pi OS.
 - [ ] Read-only root filesystem configuration for power-cut safety.
 - [ ] Hardware shutdown / reboot menu entry.
-
----
-
-## Sprint 6: Web Portfolio Demo & Emulation
-- [ ] Pygbag / WebAssembly compilation of Pi Arcade OS.
-- [ ] Interactive browser-based portfolio showcase on GitHub Pages.
-- [ ] Virtual on-screen Raspberry Pi controller overlay.

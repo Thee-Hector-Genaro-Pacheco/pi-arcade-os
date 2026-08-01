@@ -4,7 +4,7 @@ Launcher module for Pi Arcade OS.
 Manages top-level arcade state transitions (MENU, PLAYING, SHOWING_NOTICE, SHOWING_SETTINGS, EXITING),
 animated background particles, multi-layered glowing title banners, smooth fade-in transitions,
 game selection cards with hardware support badges (GPIO, LCD, Audio, Keyboard),
-gameplay statistics (Snake and Pong), and interactive Settings Subsystem UI.
+gameplay statistics (Snake, Pong, and Tetris), and interactive Settings Subsystem UI.
 Supports Python 3.9+ typing.
 """
 
@@ -321,7 +321,7 @@ class Launcher:
             if self._audio_manager:
                 self._audio_manager.play_error()
             self._notice_title = game_name
-            est = game_data.get("estimated_release", "Sprint 4")
+            est = game_data.get("estimated_release", "Sprint 6")
             self._notice_message = f"{game_name} is currently under active development! (Est. Release: {est})"
             self._state = LauncherState.SHOWING_NOTICE
             return
@@ -478,8 +478,18 @@ class Launcher:
                     stats_txt = font_desc.render(stats_str, True, colors["accent"])
                     surface.blit(stats_txt, (card_rect.left + 42, card_rect.top + 58))
 
+                elif not is_coming_soon and game["id"] == "tetris":
+                    high_score = self._save_manager.get_high_score("tetris")
+                    played = self._save_manager.get_games_played("tetris")
+                    lvl = self._save_manager.get_highest_level("tetris")
+                    lines = self._save_manager.get_total_lines("tetris")
+                    tetrises = self._save_manager.get_tetrises("tetris")
+                    stats_str = f"📊 High Score: {high_score}  |  Played: {played}  |  Lv: {lvl}  |  Lines: {lines}  |  Tetrises: {tetrises}"
+                    stats_txt = font_desc.render(stats_str, True, (6, 182, 212))
+                    surface.blit(stats_txt, (card_rect.left + 42, card_rect.top + 58))
+
                 elif is_coming_soon:
-                    est_rel = str(game.get("estimated_release", "Sprint 4"))
+                    est_rel = str(game.get("estimated_release", "Sprint 6"))
                     est_txt = font_desc.render(f"⏳ Estimated Target: {est_rel}", True, (251, 146, 60))
                     surface.blit(est_txt, (card_rect.left + 42, card_rect.top + 58))
 
@@ -605,9 +615,11 @@ class Launcher:
             elif idx == 6:
                 val_str = f"◄ {self._settings_manager.controls} ►"
             elif idx == 7:
-                val_str = "[Press Enter to Clear]"
+                self._settings_manager.reset_high_scores()
+                self._settings_toast = "High Scores Cleared!"
             elif idx == 8:
-                val_str = "[Press Enter to Reset]"
+                self._settings_manager.restore_defaults()
+                self._settings_toast = "Defaults Restored!"
 
             val_txt = font_val.render(val_str, True, colors["accent"] if is_selected else colors["text_muted"])
             surface.blit(val_txt, (r_rect.right - val_txt.get_width() - 15, r_rect.top + 6))

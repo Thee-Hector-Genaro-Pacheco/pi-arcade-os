@@ -214,6 +214,23 @@ class AudioManager:
             [(300.0, 0.10), (220.0, 0.10), (150.0, 0.20)], wave_type="square"
         )
 
+        # Pre-synthesize Tetris sound effects
+        self._sounds[SoundType.TETRIS_MOVE] = self._synthesize_pcm_wave([(360.0, 0.03)])
+        self._sounds[SoundType.TETRIS_ROTATE] = self._synthesize_pcm_wave([(540.0, 0.04)])
+        self._sounds[SoundType.TETRIS_SOFT_DROP] = self._synthesize_pcm_wave([(280.0, 0.03)])
+        self._sounds[SoundType.TETRIS_HARD_DROP] = self._synthesize_pcm_wave([(180.0, 0.04), (120.0, 0.04)], wave_type="square")
+        self._sounds[SoundType.TETRIS_LOCK] = self._synthesize_pcm_wave([(420.0, 0.04)])
+        self._sounds[SoundType.TETRIS_LINE_CLEAR] = self._synthesize_pcm_wave([(523.25, 0.05), (659.25, 0.08)])
+        self._sounds[SoundType.TETRIS_TETRIS_CLEAR] = self._synthesize_pcm_wave(
+            [(523.25, 0.06), (659.25, 0.06), (783.99, 0.06), (1046.50, 0.16)]
+        )
+        self._sounds[SoundType.TETRIS_LEVEL_UP] = self._synthesize_pcm_wave(
+            [(440.0, 0.06), (554.37, 0.06), (659.25, 0.12)]
+        )
+        self._sounds[SoundType.TETRIS_GAME_OVER] = self._synthesize_pcm_wave(
+            [(320.0, 0.08), (240.0, 0.08), (160.0, 0.16)]
+        )
+
     def _get_effective_volume(self) -> float:
         """Returns effective volume considering mute status and channel multipliers."""
         if self._muted or not self._enabled:
@@ -323,6 +340,15 @@ class AudioManager:
             SoundType.PAUSE: [(350, 0.04), (250, 0.04)],
             SoundType.VICTORY: [(523, 0.08), (659, 0.08), (784, 0.08), (1046, 0.20)],
             SoundType.DEFEAT: [(300, 0.10), (220, 0.10), (150, 0.20)],
+            SoundType.TETRIS_MOVE: [(360, 0.03)],
+            SoundType.TETRIS_ROTATE: [(540, 0.04)],
+            SoundType.TETRIS_SOFT_DROP: [(280, 0.03)],
+            SoundType.TETRIS_HARD_DROP: [(180, 0.04), (120, 0.04)],
+            SoundType.TETRIS_LOCK: [(420, 0.04)],
+            SoundType.TETRIS_LINE_CLEAR: [(523, 0.05), (659, 0.08)],
+            SoundType.TETRIS_TETRIS_CLEAR: [(523, 0.06), (659, 0.06), (784, 0.06), (1046, 0.16)],
+            SoundType.TETRIS_LEVEL_UP: [(440, 0.06), (554, 0.06), (659, 0.12)],
+            SoundType.TETRIS_GAME_OVER: [(320, 0.08), (240, 0.08), (160, 0.16)],
         }
 
         seq = tones_map.get(sound_type, [(440, 0.05)])
