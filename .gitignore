@@ -1,0 +1,30 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# High Score & Local Artifacts
+snake_highscore.txt
+*.log
+
+# IDE & System Files
+.DS_Store
+.vscode/
+.idea/
+
+# Local runtime data
+save_data.json
+save_data.json.bak
+save_data.json.tmp
+settings.json
